@@ -14,10 +14,10 @@ import java.awt.SystemColor
  * @Date  2025/6/15 00:54
  */
 abstract class AbstractLlmService(
-    protected open val providerName: String,
+    private val providerName: String,
+    private val defaultModel:String,
     protected open val apiUrl:String,
     protected open val apiKey:String,
-    protected open val defaultModel:String,
     protected open val time:Int,
 ):LlmService{
 
@@ -50,10 +50,10 @@ abstract class AbstractLlmService(
             }
         }
         if (currentChunk.isNotEmpty()) {
-            chunks.add(currentChunk.toString());
+            chunks.add(currentChunk.toString())
         }
 
-        return chunks;
+        return chunks
     }
 
     private fun isPunctuation(c: Char): Boolean {
@@ -78,13 +78,6 @@ abstract class AbstractLlmService(
         return response.content
     }
 
-    override fun getProviderName(): String{
-        return this.providerName
-    }
-
-    override fun getDefaultModel(): String {
-        return this.defaultModel
-    }
 
     /**
      * 准备请求体，将通用请求转为服务商特定格式

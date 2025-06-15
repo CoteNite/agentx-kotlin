@@ -10,7 +10,7 @@ import cn.cotenite.agentxkotlin.domain.llm.model.LlmResponse
  * @Description
  * @Date  2025/6/15 00:51
  */
-interface LlmService {
+interface LlmService{
 
     /**
      * 发送请求到LLM服务商

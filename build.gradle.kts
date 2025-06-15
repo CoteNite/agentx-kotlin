@@ -19,7 +19,7 @@ repositories {
 }
 
 // 定义版本号，如果你的pom.xml中定义了这些变量
-val mybatisPlusVersion = "3.5.3.1" // 替换为你的实际版本
+val mybatisPlusVersion = "3.5.12" // 替换为你的实际版本
 val jjwtVersion = "0.12.6" // 替换为你的实际版本
 val httpclientVersion = "4.5.14" // 替换为你的实际版本
 val fastjsonVersion = "1.2.80" // 替换为你的实际版本，注意fastjson的安全性问题，建议考虑升级到fastjson2或使用Jackson
