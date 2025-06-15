@@ -1,14 +1,37 @@
 server:
   port: 8080
+  servlet:
+    context-path: /api
 
 spring:
   application:
     name: agent-x
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/agentx_test
+    url: jdbc:postgresql://localhost:5432/agentx
     username: postgres
     password: postgres
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  mvc:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+llm:
+  provider:
+    default: ${LLM_DEFAULT_PROVIDER:siliconflow}
+    providers:
+      siliconflow:
+        name: SiliconFlow
+        api-url: ${SILICONFLOW_API_URL:https://api.siliconflow.cn/v1/chat/completions}
+        api-key: ${SILICONFLOW_API_KEY:}
+        model: ${SILICONFLOW_MODEL:deepseek-ai/DeepSeek-R1-0528-Qwen3-8B}
+        timeout: ${SILICONFLOW_TIMEOUT:30000}
 
 # MyBatis-Plus??
 mybatis-plus:
@@ -17,11 +40,15 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
+    default-enum-type-handler: org.apache.ibatis.type.EnumOrdinalTypeHandler
+    type-handlers-package: org.xhy.infrastructure.typehandler
   global-config:
     db-config:
       id-type: auto
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+      logic-delete-field: deleted_at
+      logic-delete-value: now()
+      logic-not-delete-value: "null"
+    banner: false
 
 logging:
   level:

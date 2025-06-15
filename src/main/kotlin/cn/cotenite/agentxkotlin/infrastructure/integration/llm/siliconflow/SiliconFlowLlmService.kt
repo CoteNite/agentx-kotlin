@@ -3,9 +3,9 @@ package cn.cotenite.agentxkotlin.infrastructure.integration.llm.siliconflow
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmRequest
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmResponse
 import cn.cotenite.agentxkotlin.infrastructure.integration.llm.AbstractLlmService
-import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.JSONArray
-import com.alibaba.fastjson.JSONObject
+import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONArray
+import com.alibaba.fastjson2.JSONObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -30,7 +30,7 @@ import org.springframework.web.servlet.view.BeanNameViewResolver
 class SiliconFlowLlmService(
     @Value("\${llm.provider.providers.siliconflow.name:SiliconFlow}")
     private val providerName: String,
-    @Value("\${llm.provider.providers.siliconflow.model:llama3}")
+    @Value("\${llm.provider.providers.siliconflow.model:deepseek-ai/DeepSeek-R1-0528-Qwen3-8B}")
     private val defaultModel: String,
     @Value("\${llm.provider.providers.siliconflow.api-url:https://api.siliconflow.cn/v1/chat/completions}")
     override var apiUrl: String,
@@ -259,7 +259,9 @@ class SiliconFlowLlmService(
 
                                     if (delta.containsKey("content")) {
                                         val content = delta.getString("content")
-                                        handler.onChunk(content, false)
+                                        if (content!=null){
+                                            handler.onChunk(content, false)
+                                        }
                                     }
                                 }
                             }

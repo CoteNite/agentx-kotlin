@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "2.1.10"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.5.0"
     id("io.spring.dependency-management") version "1.1.7"
@@ -22,7 +22,7 @@ repositories {
 val mybatisPlusVersion = "3.5.12" // 替换为你的实际版本
 val jjwtVersion = "0.12.6" // 替换为你的实际版本
 val httpclientVersion = "4.5.14" // 替换为你的实际版本
-val fastjsonVersion = "1.2.80" // 替换为你的实际版本，注意fastjson的安全性问题，建议考虑升级到fastjson2或使用Jackson
+val fastjsonVersion = "2.0.48" // 替换为你的实际版本，注意fastjson的安全性问题，建议考虑升级到fastjson2或使用Jackson
 val hutoolVersion = "5.8.25" // 替换为你的实际版本
 
 
@@ -48,7 +48,7 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:$httpclientVersion")
 
     // 工具库
-    implementation("com.alibaba:fastjson:$fastjsonVersion")
+    implementation ("com.alibaba.fastjson2:fastjson2:$fastjsonVersion")
     implementation("cn.hutool:hutool-all:$hutoolVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")

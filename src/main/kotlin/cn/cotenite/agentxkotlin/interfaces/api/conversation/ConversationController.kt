@@ -90,17 +90,17 @@ class ConversationController(
     @GetMapping("/chat/stream")
     fun chatStreamGet(
         @RequestParam("message") message: String,
-        @RequestParam(value = "provider", required = false) provider: String,
-        @RequestParam(value = "model", required = false) model: String,
-        @RequestParam(value = "sessionId", required = false) sessionId: String
+        @RequestParam(value = "provider", required = false) provider: String?,
+        @RequestParam(value = "model", required = false) model: String?,
+        @RequestParam(value = "sessionId", required = false) sessionId: String?
     ): SseEmitter? {
         logger.info("收到流式聊天请求(GET): ${message}, 服务商: ${provider}, 模型: ${model}")
 
         val request = StreamChatRequest(
             message = message,
-            provider = provider,
-            model = model,
-            sessionId = sessionId
+            provider = provider?:"",
+            model = model?:"",
+            sessionId = sessionId?:""
         )
         return chatStream(request)
     }
