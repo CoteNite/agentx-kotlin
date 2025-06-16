@@ -24,7 +24,7 @@ val jjwtVersion = "0.12.6" // 替换为你的实际版本
 val httpclientVersion = "4.5.14" // 替换为你的实际版本
 val fastjsonVersion = "2.0.48" // 替换为你的实际版本，注意fastjson的安全性问题，建议考虑升级到fastjson2或使用Jackson
 val hutoolVersion = "5.8.25" // 替换为你的实际版本
-
+val jacksonVersion = "2.15.3"
 
 
 dependencies {
@@ -39,7 +39,7 @@ dependencies {
     implementation("com.baomidou:mybatis-plus-boot-starter:$mybatisPlusVersion")
 
     // 数据库相关依赖
-    runtimeOnly("org.postgresql:postgresql") // 注意这里没有指定版本，Spring Boot 会管理版本
+    implementation("org.postgresql:postgresql")
 
     // JWT认证
     implementation("io.jsonwebtoken:jjwt:$jjwtVersion")
@@ -50,6 +50,11 @@ dependencies {
     // 工具库
     implementation ("com.alibaba.fastjson2:fastjson2:$fastjsonVersion")
     implementation("cn.hutool:hutool-all:$hutoolVersion")
+
+    // Jackson
+    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 

@@ -5,7 +5,6 @@ import cn.cotenite.agentxkotlin.domain.llm.model.LlmResponse
 import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.awt.SystemColor
 
 
 /**
@@ -24,7 +23,7 @@ abstract class AbstractLlmService(
     protected val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     override suspend fun chatStreamList(request: LlmRequest): List<String> {
-        logger.warn("使用默认流式响应实现（非真正流式），建议子类覆盖此方法提供真正的流式实现");
+        logger.warn("使用默认流式响应实现（非真正流式），建议子类覆盖此方法提供真正的流式实现")
 
         val response = this.chat(request)
         val content = response.content
@@ -68,7 +67,7 @@ abstract class AbstractLlmService(
 
         // 英文标点
         return c == '.' || c == ',' || c == '!' || c == '?' ||
-                c == ';' || c == ':' || c == ')' || c == ']' || c == '}';
+                c == ';' || c == ':' || c == ')' || c == ']' || c == '}'
     }
 
     override fun simpleChat(text: String): String {

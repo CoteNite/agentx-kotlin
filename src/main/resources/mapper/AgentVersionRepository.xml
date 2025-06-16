@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.cotenite.agentxkotlin.domain.agent.repository.AgentVersionRepository">
+    
+    <sql id="selectLatestPublishedAtSubQuery">
+        SELECT
+        agent_id,
+        MAX(published_at) as max_published_at
+        FROM
+        agent_versions
+        <where>
+            deleted_at IS NULL
+            <if test="publishStatus != null">
+                AND publish_status = #{publishStatus}
+            </if>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        GROUP BY
+        agent_id
+    </sql>
+    
+    <select id="selectLatestVersionsByStatus" resultMap="AgentVersionEntityMap">
+        SELECT
+        a.*
+        FROM
+        agent_versions a
+        INNER JOIN
+        (
+        <include refid="selectLatestPublishedAtSubQuery">
+            <property name="publishStatus" value="publishStatus"/>
+        </include>
+        ) b
+        ON
+        a.agent_id = b.agent_id AND a.published_at = b.max_published_at
+        WHERE
+        a.deleted_at IS NULL
+        <if test="publishStatus != null">
+            AND a.publish_status = #{publishStatus}
+        </if>
+    </select>
+    
+    <select id="selectLatestVersionsByName" resultMap="AgentVersionEntityMap">
+        SELECT
+        a.*
+        FROM
+        agent_versions a
+        INNER JOIN
+        (
+        <include refid="selectLatestPublishedAtSubQuery">
+            <property name="name" value="name"/>
+        </include>
+        ) b
+        ON
+        a.agent_id = b.agent_id AND a.published_at = b.max_published_at
+        WHERE
+        a.deleted_at IS NULL
+        <if test="name != null and name != ''">
+            AND a.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+    </select>
+    
+    <select id="selectLatestVersionsByNameAndStatus" resultMap="AgentVersionEntityMap">
+        SELECT
+        v.*
+        FROM
+        agent_versions v
+        INNER JOIN
+        (
+        <include refid="selectLatestPublishedAtSubQuery">
+            <property name="name" value="name"/>
+            <property name="publishStatus" value="status"/> </include>
+        ) latest
+        ON
+        v.agent_id = latest.agent_id AND v.published_at = latest.max_published_at
+        WHERE
+        v.deleted_at IS NULL
+        <if test="name != null and name != ''">
+            AND v.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            AND v.publish_status = #{status}
+        </if>
+    </select>
+    
+    <resultMap id="AgentVersionEntityMap" type="cn.cotenite.agentxkotlin.domain.agent.model.AgentVersionEntity">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="agent_id" property="agentId" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/> <result column="version_number" property="versionNumber" jdbcType="VARCHAR"/>
+        <result column="system_prompt" property="systemPrompt" jdbcType="LONGVARCHAR"/>
+        <result column="welcome_message" property="welcomeMessage" jdbcType="LONGVARCHAR"/>
+        <result column="model_config" property="modelConfig" jdbcType="OTHER" typeHandler="cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler"/>
+        <result column="tools" property="tools" jdbcType="OTHER" typeHandler="cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler"/>
+        <result column="knowledge_base_ids" property="knowledgeBaseIds" jdbcType="OTHER" typeHandler="cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler"/>
+        <result column="change_log" property="changeLog" jdbcType="LONGVARCHAR"/>
+        <result column="agent_type" property="agentType" jdbcType="INTEGER"/>
+        <result column="publish_status" property="publishStatus" jdbcType="INTEGER"/>
+        <result column="reject_reason" property="rejectReason" jdbcType="LONGVARCHAR"/>
+        <result column="review_time" property="reviewTime" jdbcType="TIMESTAMP"/>
+        <result column="published_at" property="publishedAt" jdbcType="TIMESTAMP"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="deleted_at" property="deletedAt" jdbcType="TIMESTAMP"/>
+    
+    </resultMap>
+
+</mapper>

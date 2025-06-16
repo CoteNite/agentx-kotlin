@@ -7,7 +7,7 @@ package cn.cotenite.agentxkotlin.interfaces.api.common
  */
 data class Response<T>(
     val code: Int, // 建议将属性改为 val，使其成为不可变数据类
-    val message: String,
+    val message: String?,
     val data: T?,
     val timestamp: Long
 ) {
@@ -30,7 +30,7 @@ data class Response<T>(
         }
 
 
-        fun <T> error(code: Int, message: String): Response<T> {
+        fun <T> error(code: Int, message: String?): Response<T> {
             return Response(code, message, null, System.currentTimeMillis())
         }
 
@@ -50,7 +50,7 @@ data class Response<T>(
          * @param message 错误消息
          * @return 响应结果
          */
-        fun <T> badRequest(message: String): Response<T> {
+        fun <T> badRequest(message: String?): Response<T> {
             return error(400, message)
         }
 
@@ -80,7 +80,7 @@ data class Response<T>(
          * @param message 错误消息
          * @return 响应结果
          */
-        fun <T> notFound(message: String): Response<T> {
+        fun <T> notFound(message: String?): Response<T> {
             return error(404, message)
         }
     }
