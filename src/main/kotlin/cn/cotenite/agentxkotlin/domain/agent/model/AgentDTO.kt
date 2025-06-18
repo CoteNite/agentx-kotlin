@@ -38,7 +38,6 @@ data class AgentDTO(
             knowledgeBaseIds = this.knowledgeBaseIds,
             publishedVersion = this.publishedVersion,
             enabled = this.enabled,
-            agentType = this.agentType,
             userId = this.userId,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt

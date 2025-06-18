@@ -1,11 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.conversation.model
 
-import cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler
-import com.baomidou.mybatisplus.annotation.IdType
-import com.baomidou.mybatisplus.annotation.TableField
-import com.baomidou.mybatisplus.annotation.TableId
-import com.baomidou.mybatisplus.annotation.TableName
-import com.baomidou.mybatisplus.extension.activerecord.Model
+import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
+import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -14,79 +10,81 @@ import java.util.*
  * @Description
  * @Date  2025/6/16 17:20
  */
-@TableName("sessions")
+@Entity
+@Table(name = "sessions")
 data class Session(
     /**
      * 会话唯一ID
      */
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
-    val id: String = UUID.randomUUID().toString(), // 数据库中为 NOT NULL，且通常是主键，可自动生成
+    @Id
+    @Column(name = "id")
+    val id: String = UUID.randomUUID().toString(),
 
     /**
      * 会话标题
      * 数据库中为 NOT NULL
      */
-    @TableField("title")
-    var title: String, // 在Java中您设置为可变，这里也使用 var
+    @Column(name = "title", nullable = false)
+    var title: String,
 
     /**
      * 所属用户ID
      * 数据库中为 NOT NULL
      */
-    @TableField("user_id")
-    val userId: String, // 通常创建后不变，使用 val
+    @Column(name = "user_id", nullable = false)
+    val userId: String,
 
     /**
      * 关联的 Agent ID
      * 数据库中为 NULLABLE
      */
-    @TableField("agent_id")
-    var agentId: String? = null, // 数据库中为 NULLABLE，默认 null
+    @Column(name = "agent_id")
+    var agentId: String? = null,
 
     /**
      * 会话描述
      * 数据库中为 NULLABLE
      */
-    @TableField("description")
-    var description: String? = null, // 数据库中为 NULLABLE，默认 null
+    @Column(name = "description")
+    var description: String? = null,
 
     /**
      * 是否归档
      * 数据库中为 NULLABLE，默认 false
      */
-    @TableField("is_archived")
-    var isArchived: Boolean = false, // 数据库中为 NULLABLE，但通常有默认值 false，这里也设置为默认值
+    @Column(name = "is_archived")
+    var isArchived: Boolean = false,
 
     /**
      * 会话元数据，可存储其他自定义信息 (JSONB 类型)
      * 数据库中为 NULLABLE
-     * 这里假设 metadata 是一个 JSON 字符串，如果它对应某个具体的对象，可以定义相应的数据类并使用 JsonTypeHandler。
      */
-    @TableField(value = "metadata", typeHandler = JsonTypeHandler::class)
-    var metadata: String? = null, // 数据库中为 NULLABLE，假设为 String 类型，可根据实际 JSON 结构调整
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    @Convert(converter = StringConverter::class)
+    var metadata: String? = null,
 
     /**
      * 创建时间
      * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
      */
-    @TableField("created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now(), // 数据库中为 NOT NULL
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 最后更新时间
      * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
      */
-    @TableField("updated_at")
-    var updatedAt: LocalDateTime = LocalDateTime.now(), // 数据库中为 NOT NULL，可变以便更新
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 删除时间（软删除）
      * 数据库中为 NULLABLE
      */
-    @TableField("deleted_at")
-    var deletedAt: LocalDateTime? = null // 数据库中为 NULLABLE，默认 null
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null
 
-):Model<Session>(){
+) {
 
     /**
      * 创建新会话的工厂方法

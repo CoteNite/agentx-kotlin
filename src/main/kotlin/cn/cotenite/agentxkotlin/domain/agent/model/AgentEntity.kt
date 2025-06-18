@@ -1,11 +1,10 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
-import cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler
-import com.baomidou.mybatisplus.annotation.IdType
-import com.baomidou.mybatisplus.annotation.TableField
-import com.baomidou.mybatisplus.annotation.TableId
-import com.baomidou.mybatisplus.annotation.TableName
-import org.apache.ibatis.type.JdbcType
+import cn.cotenite.agentxkotlin.domain.agent.model.converter.ModelConfigConverter
+import cn.cotenite.agentxkotlin.domain.agent.model.converter.AgentToolListConverter
+import cn.cotenite.agentxkotlin.domain.agent.model.converter.StringListConverter
+import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
+import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,121 +13,135 @@ import java.util.UUID
  * @Description Agent实体类
  * @Date 2025/6/16 03:01
  */
-@TableName(value = "agents", autoResultMap = true)
+@Entity
+@Table(name = "agents")
 data class AgentEntity(
     /**
      * Agent 唯一ID
      */
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
-    val id: String=UUID.randomUUID().toString(), // 数据库: NOT NULL (true -> false)
+    @Id
+    @Column(name = "id")
+    var id: String = UUID.randomUUID().toString(),
 
     /**
      * Agent 名称
      */
-    @TableField("name")
-    val name: String, // 数据库: NOT NULL (true -> false)
+    @Column(name = "name", nullable = false)
+    var name: String,
 
     /**
      * Agent 头像URL
      */
-    @TableField("avatar")
-    val avatar: String? = null, // 数据库: NULLABLE (false -> true)
+    @Column(name = "avatar")
+    var avatar: String? = null,
 
     /**
      * Agent 描述
      */
-    @TableField("description")
-    val description: String? = null, // 数据库: NULLABLE (false -> true)
+    @Column(name = "description")
+    var description: String? = null,
 
     /**
      * Agent 系统提示词
      */
-    @TableField("system_prompt")
-    val systemPrompt: String? = null, // 数据库: NULLABLE (false -> true)
+    @Column(name = "system_prompt")
+    var systemPrompt: String? = null,
 
     /**
      * 欢迎消息
      */
-    @TableField("welcome_message")
-    val welcomeMessage: String? = null, // 数据库: NULLABLE (false -> true)
+    @Column(name = "welcome_message")
+    var welcomeMessage: String? = null,
 
     /**
      * 模型配置，包含模型类型、温度等参数
-     * 注意：数据库中 'tool_ids' 对应 JSONB，这里可能是 'mode_config' 的误写或合并
-     * 假设 ModelConfig 是可空但通常有默认值
      */
-    @TableField(value = "model_config", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val modelConfig: ModelConfig? = null,
+    @Column(name = "model_config", columnDefinition = "jsonb")
+    @Convert(converter = ModelConfigConverter::class)
+    var modelConfig: ModelConfig? = null,
 
     /**
      * Agent 可使用的工具列表
-     * 数据库字段名为 'tool_ids'，类型是 jsonb，且可空。
      */
-    @TableField(value = "tools", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val tools: MutableList<AgentTool>? = null,
+    @Column(name = "tools", columnDefinition = "jsonb")
+    @Convert(converter = AgentToolListConverter::class)
+    var tools: MutableList<AgentTool>? = null,
 
     /**
      * 关联的知识库ID列表
-     * 数据库字段名与 `AgentVersionEntity` 相同，是 `knowledge_base_ids` 且可空
      */
-    @TableField(value = "knowledge_base_ids", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val knowledgeBaseIds: MutableList<String>? = null,
+    @Column(name = "knowledge_base_ids", columnDefinition = "jsonb")
+    @Convert(converter = StringListConverter::class)
+    var knowledgeBaseIds: MutableList<String>? = null,
 
     /**
      * 已发布的版本号ID
-     * 数据库字段名为 'published_version'
      */
-    @TableField("published_version")
+    @Column(name = "published_version")
     var publishedVersion: String? = null,
 
     /**
      * 是否启用
      */
-    @TableField("enabled")
+    @Column(name = "enabled")
     var enabled: Boolean = true,
 
     /**
      * Agent类型：1-聊天助手, 2-功能性Agent
      */
-    @TableField("agent_type")
-    val agentType: Int = 1,
+    @Column(name = "agent_type")
+    var type: Int = 1,
 
     /**
      * 创建者用户ID
      */
-    @TableField("user_id")
+    @Column(name = "user_id", nullable = false)
     val userId: String,
 
     /**
      * 工具预设参数
      */
-    @TableField(value = "tool_preset_params", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val toolPresetParams: String? = null, // 数据库: NULLABLE (false -> true)
+    @Column(name = "tool_preset_params", columnDefinition = "jsonb")
+    @Convert(converter = StringConverter::class)
+    var toolPresetParams: String? = null,
 
     /**
      * 多模态能力
      */
-    @TableField("multi_modal")
-    val multiModal: Boolean = false, // 数据库: NULLABLE (false -> true), 默认值为 false。可空但此处给默认值
+    @Column(name = "multi_modal")
+    var multiModal: Boolean = false,
+
+    /**
+     * 标签列表
+     */
+    @Column(name = "tags", columnDefinition = "jsonb")
+    @Convert(converter = StringListConverter::class)
+    var tags: MutableList<String>? = null,
+
+    /**
+     * 是否公开
+     */
+    @Column(name = "is_public")
+    var isPublic: Boolean = false,
 
     /**
      * 创建时间
      */
-    @TableField("create_at") // 注意：您的表数据是 created_at，这里是 create_at
-    val createdAt: LocalDateTime = LocalDateTime.now(), // 数据库: NOT NULL (true -> false), 默认值 CURRENT_TIMESTAMP
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 最后更新时间
      */
-    @TableField("update_at") // 注意：您的表数据是 updated_at，这里是 update_at
-    var updatedAt: LocalDateTime = LocalDateTime.now(), // 数据库: NOT NULL (true -> false), 默认值 CURRENT_TIMESTAMP
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 删除时间（软删除）
      */
-    @TableField("deleted_at")
-    var deletedAt: LocalDateTime? = null // 数据库: NULLABLE (false -> true)
-){
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null
+) {
     fun toDTO(): AgentDTO {
         return AgentDTO(
             id = this.id,
@@ -142,7 +155,7 @@ data class AgentEntity(
             knowledgeBaseIds = this.knowledgeBaseIds,
             publishedVersion = this.publishedVersion,
             enabled = this.enabled,
-            agentType =this.agentType,
+            agentType = this.type,
             userId = this.userId,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt

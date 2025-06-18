@@ -1,12 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.conversation.model
 
-import cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler
-import com.baomidou.mybatisplus.annotation.IdType
-import com.baomidou.mybatisplus.annotation.TableField
-import com.baomidou.mybatisplus.annotation.TableId
-import com.baomidou.mybatisplus.annotation.TableName
-import com.baomidou.mybatisplus.extension.activerecord.Model
-import org.apache.ibatis.type.JdbcType
+import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
+import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,101 +10,103 @@ import java.util.*
  * @Description
  * @Date  2025/6/16 17:25
  */
-@TableName("messages")
+@Entity
+@Table(name = "messages")
 data class Message(
     /**
      * 消息唯一ID
      * 数据库: NOT NULL
      */
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
-    val id: String = UUID.randomUUID().toString(), // 数据库中为 NOT NULL，且通常是主键，可自动生成
+    @Id
+    @Column(name = "id")
+    val id: String = UUID.randomUUID().toString(),
 
     /**
      * 所属会话ID
      * 数据库: NOT NULL
      */
-    @TableField("session_id")
+    @Column(name = "session_id", nullable = false)
     val sessionId: String,
 
     /**
      * 消息角色 (user, assistant, system)
      * 数据库: NOT NULL
      */
-    @TableField("role")
+    @Column(name = "role", nullable = false)
     val role: String,
 
     /**
      * 消息内容
      * 数据库: NOT NULL
      */
-    @TableField("content")
+    @Column(name = "content", nullable = false)
     val content: String,
 
     /**
      * 消息类型 (例如: 'TEXT', 'IMAGE', 'TOOL_CALL')
      * 数据库: NOT NULL, 默认值 'TEXT'
      */
-    @TableField("message_type")
-    val messageType: String = "TEXT", // 数据库中默认值为 'TEXT'
+    @Column(name = "message_type", nullable = false)
+    val messageType: String = "TEXT",
 
     /**
      * Token数量
      * 数据库: NOT NULL, 默认值 0
      */
-    @TableField("token_count")
-    val tokenCount: Int = 0, // 注意：Java中是 Integer，这里直接用 Kotlin 的 Int，并给出默认值 0
+    @Column(name = "token_count", nullable = false)
+    val tokenCount: Int = 0,
 
     /**
      * 服务提供商
      * 数据库: NOT NULL
      */
-    @TableField("provider")
+    @Column(name = "provider", nullable = false)
     val provider: String,
 
     /**
      * 使用的模型
      * 数据库: NOT NULL
      */
-    @TableField("model")
+    @Column(name = "model", nullable = false)
     val model: String,
 
     /**
      * 消息元数据 (JSONB 类型)
      * 数据库: NULLABLE
-     * 假设 metadata 是一个 JSON 字符串，您需要 TypeHandler 来处理它。
      */
-    @TableField(value = "metadata", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val metadata: String? = null, // 数据库中为 NULLABLE，默认 null
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    @Convert(converter = StringConverter::class)
+    val metadata: String? = null,
 
     /**
      * 消息中包含的文件URL列表 (JSONB 类型)
      * 数据库: NULLABLE
-     * 假设 file_urls 是一个 List<String>，您需要 TypeHandler 来处理它。
      */
-    @TableField(value = "file_urls", typeHandler = JsonTypeHandler::class, jdbcType = JdbcType.OTHER)
-    val fileUrls: MutableList<String>? = null, // 数据库中为 NULLABLE，默认 null
+    @Column(name = "file_urls", columnDefinition = "jsonb")
+    @Convert(converter = StringConverter::class)
+    val fileUrls: String? = null,
 
     /**
      * 创建时间
      * 数据库: NOT NULL, 默认 CURRENT_TIMESTAMP
      */
-    @TableField("created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now(), // 数据库中为 NOT NULL
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 更新时间
      * 数据库: NOT NULL, 默认 CURRENT_TIMESTAMP
      */
-    @TableField("updated_at")
-    val updatedAt: LocalDateTime = LocalDateTime.now(), // 数据库中为 NOT NULL
+    @Column(name = "updated_at", nullable = false)
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 删除时间（软删除）
      * 数据库: NULLABLE
      */
-    @TableField("deleted_at")
-    val deletedAt: LocalDateTime? = null // 数据库中为 NULLABLE，默认 null
-): Model<Message>(){
+    @Column(name = "deleted_at")
+    val deletedAt: LocalDateTime? = null
+) {
 
 
     /**

@@ -6,14 +6,10 @@ import cn.cotenite.agentxkotlin.domain.agent.repository.AgentVersionRepository
 import cn.cotenite.agentxkotlin.domain.common.exception.BusinessException
 import cn.cotenite.agentxkotlin.domain.common.util.ValidationUtils
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.SearchAgentsRequest
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper
-import com.baomidou.mybatisplus.core.toolkit.StringUtils
-import com.baomidou.mybatisplus.core.toolkit.Wrappers
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
-import java.util.stream.Collectors
 
 
 /**
@@ -160,7 +156,7 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(entity.name, "name")
         ValidationUtils.notEmpty(entity.userId, "userId")
 
-        agentRepository.insert(entity)
+        agentRepository.save(entity)
         return entity.toDTO()
     }
 
@@ -168,11 +164,7 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(agentId, "agentId")
         ValidationUtils.notEmpty(userId, "userId")
 
-        val wrapper = Wrappers.lambdaQuery<AgentEntity>()
-            .eq(AgentEntity::id, agentId)
-            .eq(AgentEntity::userId, userId)
-
-        val agent = agentRepository.selectOne(wrapper) ?: throw BusinessException("Agent 不存在:${agentId}")
+        val agent = agentRepository.findByIdAndUserIdAndDeletedAtIsNull(agentId, userId) ?: throw BusinessException("Agent 不存在:${agentId}")
 
         return agent.toDTO()
     }
@@ -180,17 +172,16 @@ class AgentServiceImpl(
     override fun getUserAgents(userId: String, searchAgentsRequest: SearchAgentsRequest): List<AgentDTO> {
         ValidationUtils.notEmpty(userId, "userId")
 
-        val wrapper = Wrappers.lambdaQuery<AgentEntity>()
-            .eq(AgentEntity::userId, userId)
-            .like(!StringUtils.isEmpty(searchAgentsRequest.name), AgentEntity::name, searchAgentsRequest.name)
-            .orderByDesc(AgentEntity::updatedAt ,AgentEntity::createdAt)
-
-        val agents = agentRepository.selectList(wrapper)
+        val agents = if (searchAgentsRequest.name.isNullOrBlank()) {
+            agentRepository.findByUserIdAndDeletedAtIsNullOrderByUpdatedAtDescCreatedAtDesc(userId)
+        } else {
+            agentRepository.findByUserIdAndNameContainingIgnoreCaseAndDeletedAtIsNullOrderByUpdatedAtDescCreatedAtDesc(userId, searchAgentsRequest.name!!)
+        }
         return agents.map { obj: AgentEntity -> obj.toDTO() }
     }
 
     override fun getPublishedAgentsByName(searchAgentsRequest: SearchAgentsRequest): List<AgentVersionDTO> {
-        val latestVersions = agentVersionRepository.selectLatestVersionsByNameAndStatus(
+        val latestVersions = agentVersionRepository.findLatestVersionsByNameAndPublishStatus(
             searchAgentsRequest.name,
             PublishStatus.PUBLISHED.code
         )
@@ -202,10 +193,8 @@ class AgentServiceImpl(
         if (versionEntities.isEmpty()){
             return Collections.emptyList()
         }
-        val wrapper = Wrappers.lambdaQuery<AgentEntity>()
-            .`in`(AgentEntity::id, versionEntities.map { obj: AgentVersionEntity -> obj.agentId })
-            .eq(AgentEntity::id, versionEntities.map { obj: AgentVersionEntity -> obj.agentId })
-        val agents = agentRepository.selectList(wrapper)
+        val agentIds = versionEntities.map { obj: AgentVersionEntity -> obj.agentId }
+        val agents = agentRepository.findByIdInAndDeletedAtIsNull(agentIds)
 
         val agentVersionMap  = versionEntities.associateBy { it.agentId }
 
@@ -219,7 +208,7 @@ class AgentServiceImpl(
         val reviewingVersions   = this.getVersionsByStatus(PublishStatus.REVIEWING)
 
         return reviewingVersions.mapNotNull { version->
-            val agent = agentRepository.selectById(version.agentId)
+            val agent = agentRepository.findByIdOrNull(version.agentId)
             if (agent!=null && agent.enabled){
                 agent.toDTO()
             }
@@ -234,18 +223,23 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(entity.name, "name")
         ValidationUtils.notEmpty(entity.userId, "userId")
 
-        val wrapper = Wrappers.lambdaUpdate<AgentEntity>()
-            .eq(AgentEntity::id, agentId)
-            .eq(AgentEntity::userId, entity.userId)
+        val existingAgent = agentRepository.findByIdAndUserIdAndDeletedAtIsNull(agentId, entity.userId) ?: throw BusinessException("Agent 不存在:${agentId}")
 
-        agentRepository.update(entity, wrapper)
-        return entity.toDTO()
+        existingAgent.name = entity.name
+        existingAgent.description = entity.description
+        existingAgent.type = entity.type
+        existingAgent.tags = entity.tags
+        existingAgent.isPublic = entity.isPublic
+        existingAgent.updatedAt = entity.updatedAt
+
+        agentRepository.save(existingAgent)
+        return existingAgent.toDTO()
     }
 
     override fun toggleAgentStatus(agentId: String): AgentDTO {
         ValidationUtils.notEmpty(agentId, "agentId")
 
-        val agent = agentRepository.selectById(agentId)
+        val agent = agentRepository.findByIdOrNull(agentId) ?: throw BusinessException("Agent 不存在:${agentId}")
 
         if (agent.enabled){
             agent.disable()
@@ -253,7 +247,7 @@ class AgentServiceImpl(
             agent.enable()
         }
 
-        agentRepository.updateById(agent)
+        agentRepository.save(agent)
         return agent.toDTO()
     }
 
@@ -262,16 +256,9 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(agentId, "agentId")
         ValidationUtils.notEmpty(userId, "userId")
 
-        val wrapper = Wrappers.lambdaQuery<AgentEntity>()
-            .eq(AgentEntity::id, agentId)
-            .eq(AgentEntity::userId, userId)
-        agentRepository.delete(wrapper)
-
-        agentVersionRepository.delete(
-            Wrappers.lambdaQuery<AgentVersionEntity>()
-                .eq(AgentVersionEntity::agentId, agentId)
-                .eq(AgentVersionEntity::userId, userId)
-        )
+        val now = java.time.LocalDateTime.now()
+        agentRepository.softDeleteByIdAndUserId(agentId, userId, now)
+        agentVersionRepository.softDeleteByAgentIdAndUserId(agentId, userId, now)
     }
 
     @Transactional
@@ -280,15 +267,9 @@ class AgentServiceImpl(
         ValidationUtils.notNull(versionEntity, "versionEntity")
         ValidationUtils.notEmpty(versionEntity.versionNumber, "versionNumber")
         ValidationUtils.notEmpty(versionEntity.userId, "userId")
-        agentRepository.selectById(agentId)?:throw BusinessException("Agent不存在: $agentId")
+        agentRepository.findByIdOrNull(agentId)?:throw BusinessException("Agent不存在: $agentId")
 
-        val latestVersionQuery: LambdaQueryWrapper<AgentVersionEntity> = Wrappers.lambdaQuery<AgentVersionEntity>()
-            .eq(AgentVersionEntity::agentId, agentId)
-            .eq(AgentVersionEntity::userId, versionEntity.userId)
-            .orderByDesc(AgentVersionEntity::publishedAt as SFunction<AgentVersionEntity, *>)
-            .last("LIMIT 1")
-
-        val latestVersion = agentVersionRepository.selectOne(latestVersionQuery)
+        val latestVersion = agentVersionRepository.findLatestVersionByAgentIdAndUserId(agentId, versionEntity.userId)
 
         if (latestVersion!=null){
             val newVersion = versionEntity.versionNumber
@@ -307,7 +288,7 @@ class AgentServiceImpl(
         versionEntity.agentId=agentId
         versionEntity.publishStatus=PublishStatus.REVIEWING.code
 
-        agentVersionRepository.insert(versionEntity)
+        agentVersionRepository.save(versionEntity)
 
         return versionEntity.toDTO()
     }
@@ -317,18 +298,18 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(versionId, "versionId")
         ValidationUtils.notNull(status, "status")
 
-        val version = agentVersionRepository.selectById(versionId)?:throw BusinessException("版本不存在：$versionId")
+        val version = agentVersionRepository.findByIdOrNull(versionId)?:throw BusinessException("版本不存在：$versionId")
 
         version.rejectReason=""
 
         version.updatePublishStatus(status)
-        agentVersionRepository.updateById(version)
+        agentVersionRepository.save(version)
 
         if (status==PublishStatus.PUBLISHED){
-            val agent = agentRepository.selectById(version.agentId)
+            val agent = agentRepository.findByIdOrNull(version.agentId)
             if (agent!=null){
                 agent.publishVersion(versionId)
-                agentRepository.updateById(agent)
+                agentRepository.save(agent)
             }
         }
         return version.toDTO()
@@ -339,10 +320,10 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(versionId, "versionId")
         ValidationUtils.notEmpty(reason, "reason")
 
-        val version = agentVersionRepository.selectById(versionId) ?: throw BusinessException("版本不存在: $versionId")
+        val version = agentVersionRepository.findByIdOrNull(versionId) ?: throw BusinessException("版本不存在: $versionId")
 
         version.reject(reason)
-        agentVersionRepository.updateById(version)
+        agentVersionRepository.save(version)
 
         return version.toDTO()
     }
@@ -382,12 +363,7 @@ class AgentServiceImpl(
     override fun getAgentVersions(agentId: String, userId: String): List<AgentVersionDTO> {
         ValidationUtils.notEmpty(agentId, "agentId")
         ValidationUtils.notEmpty(userId, "userId")
-        val queryWrapper: LambdaQueryWrapper<AgentVersionEntity> = Wrappers.lambdaQuery<AgentVersionEntity>()
-            .eq(AgentVersionEntity::agentId, agentId)
-            .eq(AgentVersionEntity::userId, userId)
-            .orderByDesc(AgentVersionEntity::publishedAt as SFunction<AgentVersionEntity,*>)
-
-        val versions = agentVersionRepository.selectList(queryWrapper)
+        val versions = agentVersionRepository.findByAgentIdAndUserIdAndDeletedAtIsNullOrderByPublishedAtDesc(agentId, userId)
         return versions.map { obj: AgentVersionEntity -> obj.toDTO() }.toList()
     }
 
@@ -395,12 +371,7 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(agentId, "agentId")
         ValidationUtils.notEmpty(versionNumber, "versionNumber")
 
-        val queryWrapper = Wrappers.lambdaQuery<AgentVersionEntity>()
-            .eq(AgentVersionEntity::agentId, agentId)
-            .eq(AgentVersionEntity::versionNumber, versionNumber)
-
-        val version =
-            agentVersionRepository.selectOne(queryWrapper) ?: throw BusinessException("版本不存在: $versionNumber")
+        val version = agentVersionRepository.findByAgentIdAndVersionNumberAndDeletedAtIsNull(agentId, versionNumber) ?: throw BusinessException("版本不存在: $versionNumber")
 
         return version.toDTO()
     }
@@ -409,19 +380,14 @@ class AgentServiceImpl(
 
         ValidationUtils.notEmpty(agentId, "agentId")
 
-        val queryWrapper: LambdaQueryWrapper<AgentVersionEntity> = Wrappers.lambdaQuery<AgentVersionEntity>()
-            .eq(AgentVersionEntity::agentId, agentId)
-            .orderByDesc(AgentVersionEntity::publishedAt as SFunction<AgentVersionEntity,*>)
-            .last("LIMIT 1")
-
-        val version = agentVersionRepository.selectOne(queryWrapper) ?: throw BusinessException("版本不存在")
+        val version = agentVersionRepository.findLatestVersionByAgentId(agentId) ?: throw BusinessException("版本不存在")
 
         return version.toDTO()
     }
 
     override fun getVersionsByStatus(status: PublishStatus): List<AgentVersionDTO> {
 
-        val latestVersions = agentVersionRepository.selectLatestVersionsByStatus(status.code)
+        val latestVersions = agentVersionRepository.findLatestVersionsByPublishStatus(status.code)
 
         return latestVersions.map { obj: AgentVersionEntity -> obj.toDTO() }.toList()
     }

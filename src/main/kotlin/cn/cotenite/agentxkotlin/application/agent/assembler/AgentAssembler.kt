@@ -27,7 +27,7 @@ class AgentAssembler {
                 avatar = request.avatar,
                 systemPrompt = request.systemPrompt,
                 welcomeMessage = request.welcomeMessage,
-                agentType = request.agentType.code,
+                type = request.agentType.code,
                 enabled = true,
                 modelConfig = request.modelConfig,
                 tools = request.tools,
@@ -84,7 +84,7 @@ class AgentAssembler {
                     knowledgeBaseIds = it.knowledgeBaseIds,
                     publishedVersion = it.publishedVersion,
                     enabled = it.enabled,
-                    agentType = it.agentType,
+                    agentType = it.type,
                     userId = it.userId,
                     createdAt = it.createdAt,
                     updatedAt = it.updatedAt

@@ -1,11 +1,8 @@
 package cn.cotenite.agentxkotlin.domain.conversation.model
 
-import cn.cotenite.agentxkotlin.infrastructure.typehandler.JsonTypeHandler
+import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
 import com.alibaba.fastjson2.JSON
-import com.baomidou.mybatisplus.annotation.IdType
-import com.baomidou.mybatisplus.annotation.TableField
-import com.baomidou.mybatisplus.annotation.TableId
-import com.baomidou.mybatisplus.annotation.TableName
+import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -15,57 +12,58 @@ import java.util.*
  * @Description
  * @Date  2025/6/16 17:11
  */
-@TableName("context")
+@Entity
+@Table(name = "context")
 data class Context(
     /**
      * 唯一ID
      */
-    @TableId(value = "id", type = IdType.ASSIGN_UUID)
+    @Id
+    @Column(name = "id")
     val id: String = UUID.randomUUID().toString(),
 
     /**
      * 关联的会话ID
      */
-    @TableField("session_id")
-    val sessionId: String, // 数据库为 NOT NULL
+    @Column(name = "session_id", nullable = false)
+    val sessionId: String,
 
     /**
      * 活跃消息列表 (JSONB 类型)
      * 数据库中为 NULLABLE
-     * 这里使用 List<Map<String, Any>> 作为示例，表示一个包含JSON对象的列表。
-     * 您需要确保有相应的 TypeHandler 来处理 JSONB 到此 Kotlin 类型的转换。
      */
-    @TableField("active_messages", typeHandler = JsonTypeHandler::class)
-    var activeMessages: String? = null, // 数据库中为 NULLABLE
+    @Column(name = "active_messages", columnDefinition = "jsonb")
+    @Convert(converter = StringConverter::class)
+    var activeMessages: String? = null,
 
     /**
      * 会话摘要内容 (TEXT 类型)
      * 数据库中为 NULLABLE
      */
-    @TableField("summary")
-    var summary: String? = null, // 数据库中为 NULLABLE
+    @Column(name = "summary")
+    var summary: String? = null,
 
     /**
      * 创建时间
      * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
      */
-    @TableField("created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now(), // 数据库为 NOT NULL
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 更新时间
      * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
      */
-    @TableField("updated_at")
-    var updatedAt: LocalDateTime = LocalDateTime.now(), // 数据库为 NOT NULL
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 
     /**
      * 删除时间（软删除）
      * 数据库中为 NULLABLE
      */
-    @TableField("deleted_at")
-    val deletedAt: LocalDateTime? = null // 数据库中为 NULLABLE
-){
+    @Column(name = "deleted_at")
+    val deletedAt: LocalDateTime? = null
+) {
 
     companion object{
         fun createNew(sessionId: String): Context {

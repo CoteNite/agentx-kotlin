@@ -5,7 +5,7 @@ import cn.cotenite.agentxkotlin.domain.conversation.model.Context
 import cn.cotenite.agentxkotlin.domain.conversation.model.Message
 import cn.cotenite.agentxkotlin.domain.conversation.repository.ContextRepository
 import cn.cotenite.agentxkotlin.domain.conversation.repository.MessageRepository
-import com.baomidou.mybatisplus.core.toolkit.Wrappers
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -71,7 +71,7 @@ class ContextServiceImpl(
 
         val messages: MutableList<Message> = mutableListOf()
         messageIds.forEach { id ->
-            val message = messageRepository.selectById(id)
+            val message = messageRepository.findByIdOrNull(id)
             if (message != null) {
                 messages.add(message)
             }
@@ -81,13 +81,11 @@ class ContextServiceImpl(
     }
 
     private fun getOrCreateContext(sessionId: String): Context {
-        val wrapper = Wrappers.lambdaQuery<Context>()
-            .eq(Context::sessionId, sessionId)
-        val context: Context? = contextRepository.selectOne(wrapper)
+        val context: Context? = contextRepository.findBySessionIdAndDeletedAtIsNull(sessionId)
 
         if (context == null) {
             val newContext = Context.createNew(sessionId)
-            contextRepository.insert(newContext)
+            contextRepository.save(newContext)
             return newContext
         }
 
@@ -99,7 +97,7 @@ class ContextServiceImpl(
         val context = getOrCreateContext(sessionId)
         context.addMessage(messageId)
         context.updatedAt=LocalDateTime.now()
-        contextRepository.updateById(context)
+        contextRepository.save(context)
 
         updateContext(sessionId)
     }
@@ -118,7 +116,7 @@ class ContextServiceImpl(
             )
             context.setActiveMessageIds(newActiveIds)
             context.updatedAt=LocalDateTime.now()
-            contextRepository.updateById(context)
+            contextRepository.save(context)
         }
     }
 
@@ -126,24 +124,20 @@ class ContextServiceImpl(
     override fun clearContext(sessionId: String) {
         val context = getOrCreateContext(sessionId)
         context.clear()
-        contextRepository.updateById(context)
+        contextRepository.save(context)
     }
 
     override fun createInitialContext(sessionId: String) {
-        val wrapper = Wrappers.lambdaQuery<Context>()
-            .eq(Context::sessionId, sessionId)
-        val existingContext = contextRepository.selectOne(wrapper)
+        val existingContext = contextRepository.findBySessionIdAndDeletedAtIsNull(sessionId)
 
         if (existingContext == null) {
             val newContext = Context.createNew(sessionId)
-            contextRepository.insert(newContext)
+            contextRepository.save(newContext)
         }
     }
 
     override fun deleteContext(sessionId: String) {
-        val wrapper = Wrappers.lambdaQuery<Context>()
-            .eq(Context::sessionId, sessionId)
-        contextRepository.delete(wrapper)
+        contextRepository.softDeleteBySessionId(sessionId, java.time.LocalDateTime.now())
     }
 
 

@@ -4,11 +4,10 @@ import cn.cotenite.agentxkotlin.domain.common.exception.EntityNotFoundException
 import cn.cotenite.agentxkotlin.domain.conversation.model.Session
 import cn.cotenite.agentxkotlin.domain.conversation.model.SessionDTO
 import cn.cotenite.agentxkotlin.domain.conversation.repository.SessionRepository
-import com.baomidou.mybatisplus.core.toolkit.Wrappers
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.stream.Collectors
+import java.time.LocalDateTime
 
 
 /**
@@ -79,96 +78,78 @@ class SessionServiceImpl(
 
     @Transactional
     override fun createSession(title: String, userId: String, description: String): SessionDTO {
-        val session= Session.createNew(title, userId)
-        session.description=description
-        sessionRepository.insert(session)
+        val session = Session.createNew(title, userId)
+        session.description = description
+        val savedSession = sessionRepository.save(session)
 
-        contextService.createInitialContext(session.id)
+        contextService.createInitialContext(savedSession.id)
 
-        return session.toDTO()
+        return savedSession.toDTO()
     }
 
     override fun getSession(sessionId: String): SessionDTO {
-        val session = sessionRepository.selectById(sessionId) ?: throw EntityNotFoundException("会话不存在: $sessionId")
+        val session = sessionRepository.findByIdOrNull(sessionId) 
+            ?: throw EntityNotFoundException("会话不存在: $sessionId")
         return session.toDTO()
     }
 
     override fun getUserSessions(userId: String): List<SessionDTO> {
-        val queryWrapper = Wrappers.lambdaQuery<Session>()
-            .eq(Session::userId, userId)
-            .orderByDesc(Session::updatedAt as SFunction<Session, *>)
-
-        return sessionRepository.selectList(queryWrapper)
+        return sessionRepository.findByUserIdAndDeletedAtIsNull(userId)
             .map(Session::toDTO)
-            .toList()
     }
 
     override fun getUserActiveSessions(userId: String): List<SessionDTO> {
-        val queryWrapper = Wrappers.lambdaQuery<Session>()
-            .eq(Session::userId, userId)
-            .eq(Session::isArchived, false)
-            .orderByDesc(Session::updatedAt as SFunction<Session, *>)
-
-        return sessionRepository.selectList(queryWrapper)
+        return sessionRepository.findByUserIdAndIsArchivedAndDeletedAtIsNull(userId, false)
             .map(Session::toDTO)
-            .toList()
     }
-    override fun getUserArchivedSessions(userId: String): List<SessionDTO> {
-        val queryWrapper = Wrappers.lambdaQuery<Session>()
-            .eq(Session::userId, userId)
-            .eq(Session::isArchived, true)
-            .orderByDesc(Session::updatedAt as SFunction<Session, *>)
 
-        return sessionRepository.selectList(queryWrapper)
+    override fun getUserArchivedSessions(userId: String): List<SessionDTO> {
+        return sessionRepository.findByUserIdAndIsArchivedAndDeletedAtIsNull(userId, true)
             .map(Session::toDTO)
-            .toList()
     }
 
     @Transactional
     override fun updateSession(sessionId: String, title: String, description: String): SessionDTO {
-        val session = sessionRepository.selectById(sessionId) ?: throw EntityNotFoundException("会话不存在: $sessionId")
+        val session = sessionRepository.findByIdOrNull(sessionId) 
+            ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
         session.update(title, description)
-        sessionRepository.updateById(session)
+        val updatedSession = sessionRepository.save(session)
 
-        return session.toDTO()
+        return updatedSession.toDTO()
     }
 
     @Transactional
     override fun archiveSession(sessionId: String): SessionDTO {
-        val session = sessionRepository.selectById(sessionId) ?: throw EntityNotFoundException("会话不存在: $sessionId")
+        val session = sessionRepository.findByIdOrNull(sessionId) 
+            ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
         session.archive()
-        sessionRepository.updateById(session)
+        val updatedSession = sessionRepository.save(session)
 
-        return session.toDTO()
+        return updatedSession.toDTO()
     }
 
     @Transactional
     override fun unArchiveSession(sessionId: String): SessionDTO {
-        val session = sessionRepository.selectById(sessionId) ?: throw EntityNotFoundException("会话不存在: $sessionId")
+        val session = sessionRepository.findByIdOrNull(sessionId) 
+            ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
         session.unArchive()
-        sessionRepository.updateById(session)
+        val updatedSession = sessionRepository.save(session)
 
-        return session.toDTO()
+        return updatedSession.toDTO()
     }
 
     @Transactional
     override fun deleteSession(sessionId: String) {
         messageService.deleteSessionMessages(sessionId)
         contextService.deleteContext(sessionId)
-        sessionRepository.deleteById(sessionId)
+        sessionRepository.softDeleteById(sessionId, LocalDateTime.now())
     }
 
     override fun searchSessions(userId: String, keyword: String): List<SessionDTO> {
-        val queryWrapper = Wrappers.lambdaQuery<Session>()
-            .eq(Session::userId, userId)
-            .like(Session::title, keyword)
-            .orderByDesc(Session::updatedAt as SFunction<Session, *>)
-
-        return sessionRepository.selectList(queryWrapper)
+        return sessionRepository.findByUserIdAndTitleContainingIgnoreCaseAndDeletedAtIsNull(userId, keyword)
             .map(Session::toDTO)
-            .toList()
     }
 }
