@@ -152,10 +152,14 @@ class ConversationService(
         }
 
         try {
+            var isLast = false
             if (llmService is SiliconFlowLlmService){
                 logger.info("使用SiliconFlow的真实流式响应")
 
-                llmService.streamChat(llmRequest) {  chunk, isLast ->
+                llmService.streamChat(llmRequest).collect{chunk->
+                    if (chunk == "[DONE]") {
+                        isLast = true
+                    }
                     val response = StreamChatResponse(
                         content = chunk,
                         done = isLast,
@@ -163,7 +167,7 @@ class ConversationService(
                         provider = llmService.getProviderName(),
                         model = request.model,
                     )
-                    responseHandler(response,isLast)
+                    responseHandler(response, isLast)
                 }
             }else{
                 logger.info("服务商不支持真实流式，使用传统分块方式")

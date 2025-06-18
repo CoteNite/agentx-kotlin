@@ -6,11 +6,12 @@ import cn.cotenite.agentxkotlin.infrastructure.integration.llm.AbstractLlmServic
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONArray
 import com.alibaba.fastjson2.JSONObject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -35,7 +36,7 @@ class SiliconFlowLlmService(
     @Value("\${llm.provider.providers.siliconflow.api-url:https://api.siliconflow.cn/v1/chat/completions}")
     override var apiUrl: String,
     @Value("\${llm.provider.providers.siliconflow.api-key:}")
-    final override var apiKey: String,
+    override var apiKey: String,
     @Value("\${llm.provider.providers.siliconflow.timeout:30000}")
     override var time: Int,
     private val beanNameViewResolver: BeanNameViewResolver,
@@ -167,12 +168,7 @@ class SiliconFlowLlmService(
         }
     }
 
-    @FunctionalInterface
-    interface StreamResponseHandler {
-        fun onChunk(chunk: String, isLast: Boolean)
-    }
-
-    fun streamChat(request: LlmRequest, handler: StreamResponseHandler) {
+    fun streamChat(request: LlmRequest): Flow<String> = flow { // 修改返回类型为 Flow<String>
         if (request.model == "default") {
             logger.info("未指定模型或使用默认模型，使用配置的默认模型: $defaultModel")
             request.model = defaultModel
@@ -183,144 +179,111 @@ class SiliconFlowLlmService(
 
             request.stream = true
 
-            val requestBody = this.prepareRequestBody(request)
+            val requestBody = prepareRequestBody(request)
 
-            this.sendStreamHttpRequest(requestBody, handler)
+            sendStreamHttpRequest(requestBody).collect { chunk ->
+                emit(chunk)
+            }
         } catch (e: Exception) {
             logger.error("调用SiliconFlow服务出错", e)
-            handler.onChunk("调用SiliconFlow服务出错${e.message}", true)
+            emit("调用SiliconFlow服务出错${e.message}")
         }
     }
 
-    fun streamChat(request: LlmRequest, onChunk: (String, Boolean) -> Unit) {
-        this.streamChat(request, object : StreamResponseHandler {
-            override fun onChunk(chunk: String, isLast: Boolean) {
-                onChunk(chunk, isLast)
-            }
-        })
-    }
+    private fun sendStreamHttpRequest(requestBody: String): Flow<String> = flow {
+        withContext(Dispatchers.IO){
+            val requestConfig = RequestConfig.custom()
+                .setConnectTimeout(time)
+                .setSocketTimeout(time)
+                .build()
 
-    private fun sendStreamHttpRequest(requestBody: String, handler: StreamResponseHandler) {
-        val requestConfig = RequestConfig.custom()
-            .setConnectTimeout(time)
-            .setSocketTimeout(time)
-            .build()
+            val httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build()
 
-        val httpClient = HttpClients.custom()
-            .setDefaultRequestConfig(requestConfig)
-            .build()
+            val httpPost = HttpPost(apiUrl)
+            httpPost.setHeader("Content-Type", "application/json")
+            httpPost.setHeader("Authorization", "Bearer $apiKey")
 
-        // Fixed: Use apiUrl instead of apiKey for the HttpPost URL
-        val httpPost = HttpPost(apiUrl)
-        httpPost.setHeader("Content-Type", "application/json")
-        httpPost.setHeader("Authorization", "Bearer $apiKey")
+            val entity = StringEntity(requestBody, ContentType.APPLICATION_JSON)
+            httpPost.entity = entity
 
-        val entity = StringEntity(requestBody, ContentType.APPLICATION_JSON)
-        httpPost.entity = entity
+            logger.debug("发送http请求到$apiUrl")
 
-        logger.debug("发送http请求到$apiUrl")
+            try {
+                httpClient.execute(httpPost).use { response ->
+                    val statusCode = response.statusLine.statusCode
+                    logger.debug("HTTP响应的状态码为$statusCode")
 
-        httpClient.execute(httpPost).use { response ->
-            val statusCode = response.statusLine.statusCode
-            logger.debug("HTTP响应的状态码为$statusCode")
+                    if (statusCode!=200){
+                        logger.error("HTTP响应失败，状态码为$statusCode")
+                        emit("HTTP响应失败，状态码为$statusCode")
+                         return@withContext
+                    }
 
-            if (statusCode != 200) {
-                logger.error("HTTP响应失败，状态码为$statusCode")
-                handler.onChunk("HTTP响应失败，状态码为$statusCode", true)
-                return
-            }
+                    response.entity.content.bufferedReader().use { reader ->
+                        var line:String?
+                        while (reader.readLine().also { line = it } != null) {
+                            line?.let { currentLine->
+                                if (currentLine.startsWith("data: ")){
+                                    val data=currentLine.substring(6)
 
-            response.entity.content.bufferedReader(Charsets.UTF_8).use { reader ->
-                val partialData = StringBuilder()
+                                    if ("[DONE]"==data){
+                                        logger.info("接收到[DONE]，结束请求")
+                                        return@withContext
+                                    }
 
-                reader.forEachLine { line ->
-                    if (line.startsWith("data: ")) {
-                        val data = line.substring(6)
+                                    try {
+                                        val jsonData=JSON.parseObject(data)
+                                        if (jsonData.containsKey("choices") && !jsonData.getJSONArray("choices").isEmpty()){
+                                            val choice = jsonData.getJSONArray("choices").getJSONObject(0)
 
-                        if ("[DONE]" == data) {
-                            logger.debug("流式响应结束")
-                            if (partialData.isNotEmpty()) {
-                                handler.onChunk(partialData.toString(), true)
-                                partialData.setLength(0)
-                            } else {
-                                handler.onChunk("", true)
-                            }
-                            return@forEachLine
-                        }
+                                            if (choice.containsKey("delta")) {
+                                                val delta = choice.getJSONObject("delta")
 
-                        try {
-                            val jsonData = JSON.parseObject(data)
-
-                            if (jsonData.containsKey("choices") && !jsonData.getJSONArray("choices").isEmpty()) {
-                                val choice = jsonData.getJSONArray("choices").getJSONObject(0)
-
-                                if (choice.containsKey("delta")) {
-                                    val delta = choice.getJSONObject("delta")
-
-                                    if (delta.containsKey("content")) {
-                                        val content = delta.getString("content")
-                                        if (content!=null){
-                                            handler.onChunk(content, false)
+                                                if (delta.containsKey("content")) {
+                                                    val content = delta.getString("content")
+                                                    if (content != null) {
+                                                        emit(content)
+                                                    }
+                                                }
+                                            }
                                         }
+                                    }catch (e: Exception){
+                                        logger.error("解析流式响应JSON出错", e)
+                                        emit("解析响应出错: ${e.message}")
                                     }
                                 }
                             }
-                        } catch (e: Exception) {
-                            logger.error("解析流式响应JSON出错", e)
-                            handler.onChunk("解析响应出错: ${e.message}", false)
                         }
                     }
                 }
+            }catch (e: Exception) {
+                logger.error("HTTP请求执行出错", e)
+                emit("HTTP请求执行出错: ${e.message}")
             }
         }
     }
+
+
 
     override suspend fun chatStreamList(request: LlmRequest): List<String> {
         if (request.model == "default") {
             logger.info("未指定模型或使用默认模型，使用配置的默认模型: $defaultModel")
             request.model = defaultModel
         }
-
         return try {
             logger.info("发送流式请求到SiliconFlow服务, 模型:${request.model},消息数:${request.messages.size}")
 
             request.stream = true
             val requestBody = this.prepareRequestBody(request)
 
-            val chunks = mutableListOf<String>()
-            val channel = Channel<String>(Channel.UNLIMITED)
-
-            val job = CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    sendStreamHttpRequest(requestBody, object : StreamResponseHandler {
-                        override fun onChunk(chunk: String, isLast: Boolean) {
-                            runBlocking {
-                                channel.send(chunk)
-                                if (isLast) {
-                                    channel.close()
-                                }
-                            }
-                        }
-                    })
-                } catch (e: Exception) {
-                    channel.close()
-                }
-            }
-
-            try {
-                for (chunk in channel) {
-                    chunks.add(chunk)
-                }
-            } catch (e: Exception) {
-                job.cancel()
-                throw e
-            }
-
-            job.join()
-
+           val chunks=this.sendStreamHttpRequest(requestBody).catch {e->
+               logger.error("调用SiliconFlow流式服务出错", e)
+               emit("调用流式服务时发生错误: ${e.message}")
+           }.toList()
             logger.info("SiliconFlow流式响应完成，共返回 {} 个块", chunks.size)
-            chunks.toList()
-
+            chunks
         } catch (e: Exception) {
             logger.error("调用SiliconFlow流式服务出错", e)
             listOf("调用流式服务时发生错误: ${e.message}")

@@ -1,6 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.conversation.service
 
 import cn.cotenite.agentxkotlin.domain.conversation.model.MessageDTO
+import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 
@@ -46,4 +47,31 @@ interface ConversationService {
      */
     fun clearContext(sessionId: String)
 
+}
+
+class ConversationServiceImpl(
+    private val sessionService: SessionService,
+    private val contextService: ContextService,
+    private val llmService: LlmService,
+) : ConversationService {
+
+    companion object{
+        private const val DEFAULT_SYSTEM_PROMPT: String = "你是一个有帮助的AI助手，请尽可能准确、有用地回答用户问题。"
+    }
+
+    override fun chat(sessionId: String, content: String): SseEmitter {
+        TODO("Not yet implemented")
+    }
+
+    override fun chatSync(sessionId: String, content: String): MessageDTO {
+        TODO("Not yet implemented")
+    }
+
+    override fun createSessionAndChat(title: String, userId: String, content: String): SseEmitter {
+        TODO("Not yet implemented")
+    }
+
+    override fun clearContext(sessionId: String) {
+        TODO("Not yet implemented")
+    }
 }
