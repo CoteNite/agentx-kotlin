@@ -162,6 +162,37 @@ class AgentVersionEntity(
     var deletedAt: LocalDateTime? = null // 数据库中为 NULLABLE，所以这里是可空类型，并默认 null
 ) : Model<AgentVersionEntity>() {
 
+
+
+    companion object {
+        /**
+         * 从Agent实体创建一个新的版本实体
+         */
+        fun createFromAgent(agent: AgentEntity, versionNumber: String, changeLog: String): AgentVersionEntity {
+            val now = LocalDateTime.now()
+            return AgentVersionEntity(
+                agentId = agent.id,
+                name = agent.name,
+                avatar = agent.avatar,
+                description = agent.description,
+                versionNumber = versionNumber,
+                systemPrompt = agent.systemPrompt,
+                welcomeMessage = agent.welcomeMessage,
+                modelConfig = agent.modelConfig,
+                tools = agent.tools,
+                knowledgeBaseIds = agent.knowledgeBaseIds,
+                userId = agent.userId,
+                agentType = agent.agentType,
+                changeLog = changeLog,
+                createdAt = now,
+                updatedAt = now,
+                publishedAt = now,
+                publishStatus = PublishStatus.REVIEWING.code,
+                reviewTime = now
+            )
+        }
+    }
+
     fun toDTO(): AgentVersionDTO {
         return AgentVersionDTO(
             id = id,
@@ -206,30 +237,5 @@ class AgentVersionEntity(
         this.reviewTime = LocalDateTime.now()
     }
 
-    /**
-     * 从Agent实体创建一个新的版本实体
-     */
-    fun createFromAgent(agent: AgentEntity, versionNumber: String, changeLog: String): AgentVersionEntity {
-        val now = LocalDateTime.now()
-        return AgentVersionEntity(
-            agentId = agent.id,
-            name = agent.name,
-            avatar = agent.avatar,
-            description = agent.description,
-            versionNumber = versionNumber,
-            systemPrompt = agent.systemPrompt,
-            welcomeMessage = agent.welcomeMessage,
-            modelConfig = agent.modelConfig,
-            tools = agent.tools,
-            knowledgeBaseIds = agent.knowledgeBaseIds,
-            userId = agent.userId,
-            agentType = agent.agentType,
-            changeLog = changeLog,
-            createdAt = now,
-            updatedAt = now,
-            publishedAt = now,
-            publishStatus = PublishStatus.REVIEWING.code,
-            reviewTime = now
-        )
-    }
+
 }

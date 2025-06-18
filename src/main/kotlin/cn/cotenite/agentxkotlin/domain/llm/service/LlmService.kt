@@ -2,6 +2,7 @@ package cn.cotenite.agentxkotlin.domain.llm.service
 
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmRequest
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmResponse
+import kotlinx.coroutines.flow.Flow
 
 /**
  * @Author  RichardYoung
@@ -24,7 +25,7 @@ interface LlmService{
      * @param request LLM请求
      * @return 文本块列表
      */
-    suspend fun chatStreamList(request: LlmRequest): List<String>
+    suspend fun chatStreamList(request: LlmRequest): Flow<String>
 
     /**
      * 发送简单的文本请求

@@ -3,6 +3,8 @@ package cn.cotenite.agentxkotlin.infrastructure.integration.llm
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmRequest
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmResponse
 import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -22,7 +24,7 @@ abstract class AbstractLlmService(
 
     protected val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    override suspend fun chatStreamList(request: LlmRequest): List<String> {
+    override suspend fun chatStreamList(request: LlmRequest): Flow<String> {
         logger.warn("使用默认流式响应实现（非真正流式），建议子类覆盖此方法提供真正的流式实现")
 
         val response = this.chat(request)
@@ -31,10 +33,10 @@ abstract class AbstractLlmService(
         return splitIntoChunks(content)
     }
 
-    private fun splitIntoChunks(text: String): List<String> {
+    private fun splitIntoChunks(text: String): Flow<String> =flow{
         val chunks = mutableListOf<String>()
         if (text.isNotEmpty()){
-            return chunks
+            return@flow
         }
 
         val currentChunk = StringBuilder()
@@ -43,16 +45,14 @@ abstract class AbstractLlmService(
             val c = text[i]
             currentChunk.append(c)
 
-            if ((this.isPunctuation(c)||i%3==2)&&i<text.length-1){
+            if ((this@AbstractLlmService.isPunctuation(c)||i%3==2)&&i<text.length-1){
                 chunks.add(currentChunk.toString())
                 currentChunk.clear()
             }
         }
         if (currentChunk.isNotEmpty()) {
-            chunks.add(currentChunk.toString())
+            emit(currentChunk.toString())
         }
-
-        return chunks
     }
 
     private fun isPunctuation(c: Char): Boolean {
@@ -65,7 +65,6 @@ abstract class AbstractLlmService(
             return true
         }
 
-        // 英文标点
         return c == '.' || c == ',' || c == '!' || c == '?' ||
                 c == ';' || c == ':' || c == ')' || c == ']' || c == '}'
     }

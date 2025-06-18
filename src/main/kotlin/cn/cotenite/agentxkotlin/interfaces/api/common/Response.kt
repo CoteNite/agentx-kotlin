@@ -21,6 +21,7 @@ data class Response<T>(
             return Response(200, "操作成功")
         }
 
+
         fun <T> success(data: T): Response<T> {
             return Response(200, "操作成功", data)
         }

@@ -7,7 +7,7 @@ package cn.cotenite.agentxkotlin.domain.llm.model
  */
 data class LlmRequest(
     var model:String = "default",
-    val messages: MutableList<LlmMessage> = mutableListOf(),
+    var messages: MutableList<LlmMessage> = mutableListOf(),
     val temperature: Double=0.7,
     val maxTokens: Int=512,
     var stream: Boolean=false

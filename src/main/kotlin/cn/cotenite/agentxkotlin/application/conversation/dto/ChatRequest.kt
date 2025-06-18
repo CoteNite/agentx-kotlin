@@ -9,8 +9,8 @@ import jakarta.validation.constraints.NotBlank
  */
 open class ChatRequest(
     @NotBlank(message = "消息内容不能为空")
-    open val message: String,
-    open var provider: String,
-    open val model: String="",
-    open val sessionId: String
+    open val message: String?,
+    open var provider: String?,
+    open val model: String?,
+    open val sessionId: String?
 )

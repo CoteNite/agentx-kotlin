@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
 import org.apache.ibatis.type.JdbcType
 import java.time.LocalDateTime
+import java.util.UUID
 
 /**
  * @Author RichardYoung
@@ -19,7 +20,7 @@ data class AgentEntity(
      * Agent 唯一ID
      */
     @TableId(value = "id", type = IdType.ASSIGN_UUID)
-    val id: String, // 数据库: NOT NULL (true -> false)
+    val id: String=UUID.randomUUID().toString(), // 数据库: NOT NULL (true -> false)
 
     /**
      * Agent 名称
@@ -96,7 +97,7 @@ data class AgentEntity(
      * 创建者用户ID
      */
     @TableField("user_id")
-    val userId: String, // 数据库: NOT NULL (true -> false)
+    val userId: String,
 
     /**
      * 工具预设参数

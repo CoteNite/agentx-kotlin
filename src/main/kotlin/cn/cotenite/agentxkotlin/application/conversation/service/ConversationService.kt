@@ -69,18 +69,26 @@ class ConversationService(
         }
 
         try {
-            val chunks = llmService.chatStreamList(llmRequest)
-
-            chunks.forEachIndexed{ index, chunk ->
+             llmService.chatStreamList(llmRequest).collect{chunk->
                 val response = StreamChatResponse(
                     content = chunk,
-                    done = index == chunks.size - 1,
+                    done = false,
                     sessionId = request.sessionId,
                     provider = llmService.getProviderName(),
                     model = llmRequest.model
                 )
                 responses.add(response)
             }
+
+            val finalResponse = StreamChatResponse(
+                content = "", // 或者一个表示结束的空字符串
+                done = true,
+                sessionId = request.sessionId,
+                provider = llmService.getProviderName(),
+                model = llmRequest.model
+            )
+
+            responses.add(finalResponse)
 
             if (responses.isEmpty()){
                 responses.add(this.createFinalResponse(request, llmService))
@@ -172,19 +180,25 @@ class ConversationService(
             }else{
                 logger.info("服务商不支持真实流式，使用传统分块方式")
 
-                val chunks  = llmService.chatStreamList(llmRequest)
-
-                chunks.forEachIndexed { index, chunk ->
-                    val isLast = index == chunks.size - 1
+                val chunks  = llmService.chatStreamList(llmRequest).collect{chunk->
                     val response = StreamChatResponse(
                         content = chunk,
                         sessionId = request.sessionId,
                         provider = llmService.getProviderName(),
-                        model = request.model,
-                        done = isLast
+                        model = llmRequest.model,
+                        done = false // 此时不能确定是否是最后一个，所以设为 false
                     )
-                    responseHandler(response,isLast)
+                    responseHandler(response, false)
                 }
+                val finalCompletionResponse = StreamChatResponse(
+                    content = "",
+                    sessionId = request.sessionId,
+                    provider = llmService.getProviderName(),
+                    model = request.model,
+                    done = true
+                )
+                responseHandler(finalCompletionResponse, true)
+
             }
         }catch (e:Exception){
             logger.error("处理流式聊天请求异常", e)

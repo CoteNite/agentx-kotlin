@@ -6,12 +6,11 @@ import cn.cotenite.agentxkotlin.infrastructure.integration.llm.AbstractLlmServic
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONArray
 import com.alibaba.fastjson2.JSONObject
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withContext
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -267,26 +266,20 @@ class SiliconFlowLlmService(
 
 
 
-    override suspend fun chatStreamList(request: LlmRequest): List<String> {
+    override suspend fun chatStreamList(request: LlmRequest): Flow<String> {
         if (request.model == "default") {
             logger.info("未指定模型或使用默认模型，使用配置的默认模型: $defaultModel")
             request.model = defaultModel
         }
-        return try {
-            logger.info("发送流式请求到SiliconFlow服务, 模型:${request.model},消息数:${request.messages.size}")
 
-            request.stream = true
-            val requestBody = this.prepareRequestBody(request)
+        logger.info("发送流式请求到SiliconFlow服务, 模型:${request.model},消息数:${request.messages.size}")
 
-           val chunks=this.sendStreamHttpRequest(requestBody).catch {e->
-               logger.error("调用SiliconFlow流式服务出错", e)
-               emit("调用流式服务时发生错误: ${e.message}")
-           }.toList()
-            logger.info("SiliconFlow流式响应完成，共返回 {} 个块", chunks.size)
-            chunks
-        } catch (e: Exception) {
+        request.stream = true
+        val requestBody = this.prepareRequestBody(request)
+
+        return this.sendStreamHttpRequest(requestBody).catch { e ->
             logger.error("调用SiliconFlow流式服务出错", e)
-            listOf("调用流式服务时发生错误: ${e.message}")
+            emit("调用流式服务时发生错误: ${e.message}")
         }
     }
 }

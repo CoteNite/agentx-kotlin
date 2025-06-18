@@ -1,8 +1,18 @@
 package cn.cotenite.agentxkotlin.domain.conversation.service
 
+import cn.cotenite.agentxkotlin.application.conversation.dto.StreamChatResponse
+import cn.cotenite.agentxkotlin.domain.conversation.model.Message
 import cn.cotenite.agentxkotlin.domain.conversation.model.MessageDTO
+import cn.cotenite.agentxkotlin.domain.llm.model.LlmMessage
+import cn.cotenite.agentxkotlin.domain.llm.model.LlmRequest
 import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.io.IOException
 
 
 /**
@@ -49,9 +59,11 @@ interface ConversationService {
 
 }
 
+@Service
 class ConversationServiceImpl(
     private val sessionService: SessionService,
     private val contextService: ContextService,
+    private val messageService: MessageService,
     private val llmService: LlmService,
 ) : ConversationService {
 
@@ -59,19 +71,123 @@ class ConversationServiceImpl(
         private const val DEFAULT_SYSTEM_PROMPT: String = "你是一个有帮助的AI助手，请尽可能准确、有用地回答用户问题。"
     }
 
+    private val log= LoggerFactory.getLogger(ConversationServiceImpl::class.java)
+
+
     override fun chat(sessionId: String, content: String): SseEmitter {
-        TODO("Not yet implemented")
+        val emitter = SseEmitter()
+        messageService.sendUserMessage(sessionId, content)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val contextMessages = contextService.getContextMessages(sessionId)
+                val llmMessages = this@ConversationServiceImpl.convertToLlmMessages(contextMessages)
+
+                val request = LlmRequest(
+                    messages = llmMessages,
+                    stream = true
+                )
+
+                val fullResponse  = StringBuilder()
+
+                llmService.chatStreamList(request).collect{chunk->
+                    fullResponse.append(chunk)
+                    val response = StreamChatResponse(
+                        content=chunk,
+                        done = false,
+                        sessionId = sessionId,
+                        provider = llmService.getProviderName(),
+                        model = llmService.getDefaultModel(),
+                    )
+                    try {
+                        emitter.send(response)
+                    } catch (e: IOException) {
+                        emitter.completeWithError(e)
+                        throw RuntimeException(e)
+                    }
+                }
+                val assistantMessageDTO = messageService.saveAssistantMessage(
+                    sessionId = sessionId,
+                    content=fullResponse.toString(),
+                    provider = llmService.getProviderName(),
+                    model = llmService.getDefaultModel(),
+                    tokenCount = 0
+                )
+
+                val doneResponse = StreamChatResponse(
+                    content = "",
+                    done = true,
+                    sessionId = sessionId,
+                    provider = llmService.getProviderName(),
+                    model =llmService.getDefaultModel()
+                )
+
+                emitter.send(doneResponse)
+                emitter.complete()
+
+            }catch (e:Exception){
+                log.error("Stream chat error", e)
+                try {
+                    val errorResponse = StreamChatResponse(
+                        content="错误: ${e.message}",
+                        done = true,
+                        sessionId = sessionId,
+                        provider = "",
+                        model = ""
+                    )
+                    emitter.send(errorResponse)
+                    emitter.complete()
+                } catch (ex: IOException) {
+                    emitter.completeWithError(ex)
+                }
+            }
+        }
+        return emitter
     }
 
     override fun chatSync(sessionId: String, content: String): MessageDTO {
-        TODO("Not yet implemented")
+        messageService.sendUserMessage(sessionId, content)
+
+        val contextMessages = contextService.getContextMessages(sessionId)
+
+        val llmMessages: MutableList<LlmMessage> = this.convertToLlmMessages(contextMessages)
+
+        val request = LlmRequest()
+        request.messages=llmMessages
+
+        val response = llmService.chat(request).content
+
+        return messageService.saveAssistantMessage(
+            sessionId,
+            response,
+            llmService.getProviderName(),
+            llmService.getDefaultModel(),
+            0
+        )
     }
 
+    private fun convertToLlmMessages(messages: MutableList<Message>): MutableList<LlmMessage> {
+        val llmMessages = mutableListOf<LlmMessage>()
+        for (message in messages) {
+            llmMessages.add(LlmMessage(message.role, message.content))
+        }
+        return llmMessages
+
+    }
+
+
+
     override fun createSessionAndChat(title: String, userId: String, content: String): SseEmitter {
-        TODO("Not yet implemented")
+
+        val sessionDTO = sessionService.createSession(title, userId, "")
+        val sessionId = sessionDTO.id
+
+        messageService.saveSystemMessage(sessionId, DEFAULT_SYSTEM_PROMPT)
+
+        return this.chat(sessionId, content)
     }
 
     override fun clearContext(sessionId: String) {
-        TODO("Not yet implemented")
+        contextService.clearContext(sessionId)
     }
+
 }

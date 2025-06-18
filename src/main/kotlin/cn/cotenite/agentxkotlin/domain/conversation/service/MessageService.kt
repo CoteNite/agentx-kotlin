@@ -28,7 +28,10 @@ interface MessageService {
      * 保存助手响应消息
      */
     fun saveAssistantMessage(
-        sessionId: String, content: String, provider: String, model: String,
+        sessionId: String,
+        content: String,
+        provider: String,
+        model: String,
         tokenCount: Int
     ): MessageDTO
 

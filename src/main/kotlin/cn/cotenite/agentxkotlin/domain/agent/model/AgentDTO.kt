@@ -14,13 +14,35 @@ data class AgentDTO(
     val description: String?,
     val systemPrompt: String?,
     val welcomeMessage: String?,
-    val modeConfig: ModelConfig?,
+    val modelConfig: ModelConfig?,
     val tools: MutableList<AgentTool>?,
     val knowledgeBaseIds: MutableList<String>?,
     val publishedVersion: String?,
     val enabled:Boolean,
     val agentType:Int,
     val userId:String,
-    val createAt:LocalDateTime,
-    val updateAt:LocalDateTime
-)
+    val createdAt:LocalDateTime,
+    val updatedAt:LocalDateTime
+){
+
+    fun toEntity(): AgentEntity {
+        return AgentEntity(
+            id = this.id,
+            name = this.name,
+            avatar = this.avatar,
+            description = this.description,
+            systemPrompt = this.systemPrompt,
+            welcomeMessage = this.welcomeMessage,
+            modelConfig = this.modelConfig,
+            tools = this.tools,
+            knowledgeBaseIds = this.knowledgeBaseIds,
+            publishedVersion = this.publishedVersion,
+            enabled = this.enabled,
+            agentType = this.agentType,
+            userId = this.userId,
+            createdAt = this.createdAt,
+            updatedAt = this.updatedAt
+        )
+    }
+
+}

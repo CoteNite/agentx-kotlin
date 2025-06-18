@@ -137,7 +137,7 @@ interface AgentService {
      * @param agentId Agent ID，不能为空
      * @return 最新版本信息
      */
-    fun getLatestAgentVersion(agentId: String): AgentVersionDTO?
+    fun getLatestAgentVersion(agentId: String): AgentVersionDTO
 
     /**
      * 获取指定状态的所有版本
@@ -405,7 +405,7 @@ class AgentServiceImpl(
         return version.toDTO()
     }
 
-    override fun getLatestAgentVersion(agentId: String): AgentVersionDTO? {
+    override fun getLatestAgentVersion(agentId: String): AgentVersionDTO {
 
         ValidationUtils.notEmpty(agentId, "agentId")
 
@@ -414,7 +414,7 @@ class AgentServiceImpl(
             .orderByDesc(AgentVersionEntity::publishedAt as SFunction<AgentVersionEntity,*>)
             .last("LIMIT 1")
 
-        val version = agentVersionRepository.selectOne(queryWrapper) ?: return null
+        val version = agentVersionRepository.selectOne(queryWrapper) ?: throw BusinessException("版本不存在")
 
         return version.toDTO()
     }

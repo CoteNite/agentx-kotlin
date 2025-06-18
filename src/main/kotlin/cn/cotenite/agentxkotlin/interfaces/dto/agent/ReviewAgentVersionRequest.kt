@@ -12,14 +12,13 @@ import cn.cotenite.agentxkotlin.domain.common.util.ValidationUtils
  */
 data class ReviewAgentVersionRequest(
     val status: PublishStatus,
-    val rejectReason: String?
+    var rejectReason: String?=null
 ){
 
     fun validate() {
         ValidationUtils.notNull(status, "status")
 
-        if (PublishStatus.REJECTED == status &&
-            (rejectReason == null || rejectReason.trim { it <= ' ' }.isEmpty())
+        if (PublishStatus.REJECTED == status && (rejectReason == null || rejectReason?.trim { it <= ' ' }?.isEmpty() != false)
         ) {
             throw ParamValidationException("rejectReason", "拒绝时必须提供拒绝原因")
         }
