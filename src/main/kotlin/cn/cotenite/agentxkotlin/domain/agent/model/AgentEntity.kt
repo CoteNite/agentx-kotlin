@@ -137,15 +137,15 @@ data class AgentEntity(
             description = this.description,
             systemPrompt = this.systemPrompt,
             welcomeMessage = this.welcomeMessage,
-            modeConfig = this.modelConfig,
+            modelConfig = this.modelConfig,
             tools = this.tools,
             knowledgeBaseIds = this.knowledgeBaseIds,
             publishedVersion = this.publishedVersion,
             enabled = this.enabled,
             agentType =this.agentType,
             userId = this.userId,
-            createAt = this.createdAt,
-            updateAt = this.updatedAt
+            createdAt = this.createdAt,
+            updatedAt = this.updatedAt
         )
     }
 

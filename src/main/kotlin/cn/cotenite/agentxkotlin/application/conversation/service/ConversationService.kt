@@ -180,7 +180,7 @@ class ConversationService(
             }else{
                 logger.info("服务商不支持真实流式，使用传统分块方式")
 
-                val chunks  = llmService.chatStreamList(llmRequest).collect{chunk->
+                llmService.chatStreamList(llmRequest).collect{chunk->
                     val response = StreamChatResponse(
                         content = chunk,
                         sessionId = request.sessionId,

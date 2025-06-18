@@ -36,7 +36,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.17")
 
     // MyBatis Plus 依赖
-    implementation("com.baomidou:mybatis-plus-boot-starter:$mybatisPlusVersion")
+    implementation("com.baomidou:mybatis-plus-spring-boot3-starter:$mybatisPlusVersion")
 
     // 数据库相关依赖
     implementation("org.postgresql:postgresql")

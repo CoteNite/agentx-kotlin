@@ -39,7 +39,7 @@ class PortalConversationController(
     fun chat(@RequestBody @Validated request: ChatRequest): Response<ChatResponse> {
         logger.info("收到聊天请求: ${request.message}, 服务商: ${request.provider}, 模型: ${request.model}")
 
-        if (request.provider==null|| request.provider?.isEmpty() == true) {
+        if (request.provider.isEmpty()) {
             request.provider = "siliconflow"
         }
 
@@ -62,7 +62,7 @@ class PortalConversationController(
     fun chatStream(@RequestBody @Validated request: StreamChatRequest): SseEmitter {
         logger.info("收到流式聊天请求(POST): ${request.message}, 服务商: ${request.provider}, 模型: ${request.model}")
 
-        if (request.provider == null|| request.provider?.isEmpty() == true) {
+        if (request.provider.isEmpty()) {
             request.provider = "siliconflow"
         }
 
@@ -87,10 +87,9 @@ class PortalConversationController(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // 使用新的真正流式实现
-                conversationAppService.chatStream(request) { response: StreamChatResponse?, isLast: Boolean ->
+                conversationAppService.chatStream(request) { response: StreamChatResponse, isLast: Boolean ->
                     try {
-                        // 发送每个响应块到客户端
-                        emitter.send(response!!)
+                        emitter.send(response)
 
                         // 如果是最后一个响应块，完成请求
                         if (isLast) {
@@ -121,9 +120,9 @@ class PortalConversationController(
      */
     @GetMapping("/chat/stream")
     fun chatStreamGet(
-        @RequestParam("message") message: String?,
+        @RequestParam("message") message: String,
+        @RequestParam(value = "model") model: String,
         @RequestParam(value = "provider", required = false) provider: String?,
-        @RequestParam(value = "model", required = false) model: String?,
         @RequestParam(value = "sessionId", required = false) sessionId: String?
     ): SseEmitter {
         logger.info("收到流式聊天请求(GET): ${message}, 服务商: ${provider}, 模型: ${model}")
@@ -132,9 +131,8 @@ class PortalConversationController(
         val request = StreamChatRequest(
             message = message,
             provider =  provider ?: "siliconflow",
-            sessionId = sessionId,
+            sessionId = sessionId?:"",
             model = model,
-
         )
 
         // 调用POST方法处理

@@ -23,7 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
  */
 @RestController
 @RequestMapping("/conversation")
-private class PortalSessionController(
+class PortalSessionController(
     private val conversationAppService: ConversationAppService,
     private val sessionAppService: SessionAppService,
     private val messageAppService: MessageAppService

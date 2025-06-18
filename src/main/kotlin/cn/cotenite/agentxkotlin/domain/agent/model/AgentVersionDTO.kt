@@ -1,5 +1,6 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
+import cn.cotenite.agentxkotlin.domain.common.exception.BusinessException
 import java.time.LocalDateTime
 
 data class AgentVersionDTO(
@@ -115,14 +116,24 @@ data class AgentVersionDTO(
 ) {
 
     val agentTypeText: String
-        get() = agentType.let { AgentType.fromCode(it).description }
+        get() = agentType.let {
+            if (it == null){
+                throw BusinessException("INVALID_TYPE_CODE", "无效的Agent类型码")
+            }
+            AgentType.fromCode(it).description
+        }
 
     /**
      * 获取发布状态的描述文本
      * 计算属性，根据 publishStatus 返回 PublishStatus 的描述
      */
     val publishStatusText: String
-        get() = publishStatus.let { PublishStatus.fromCode(it).description }
+        get() = publishStatus.let {
+            if (it == null) {
+                throw BusinessException("INVALID_STATUS_CODE", "无效的发布状态码")
+            }
+            PublishStatus.fromCode(it).description
+        }
 
     /**
      * 是否已发布状态
