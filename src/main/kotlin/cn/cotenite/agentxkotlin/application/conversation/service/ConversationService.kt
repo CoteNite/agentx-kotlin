@@ -7,6 +7,7 @@ import cn.cotenite.agentxkotlin.application.conversation.dto.StreamChatResponse
 import cn.cotenite.agentxkotlin.domain.llm.model.LlmRequest
 import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
 import cn.cotenite.agentxkotlin.infrastructure.integration.llm.siliconflow.SiliconFlowLlmService
+import kotlinx.coroutines.flow.catch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -160,27 +161,62 @@ class ConversationService(
         }
 
         try {
-            var isLast = false
             if (llmService is SiliconFlowLlmService){
                 logger.info("使用SiliconFlow的真实流式响应")
 
-                llmService.streamChat(llmRequest).collect{chunk->
-                    if (chunk == "[DONE]") {
-                        isLast = true
+                llmService.streamChat(llmRequest)
+                    .catch { e ->
+                        logger.error("SiliconFlow流式处理异常", e)
+                        // 发送错误响应并标记为完成
+                        val errorResponse = StreamChatResponse(
+                            content = "流式处理异常: ${e.message}",
+                            done = true,
+                            sessionId = request.sessionId,
+                            provider = llmService.getProviderName(),
+                            model = request.model
+                        )
+                        responseHandler(errorResponse, true)
                     }
-                    val response = StreamChatResponse(
-                        content = chunk,
-                        done = isLast,
-                        sessionId = request.sessionId,
-                        provider = llmService.getProviderName(),
-                        model = request.model,
-                    )
-                    responseHandler(response, isLast)
+                    .collect{chunk->
+                    if (chunk == "[DONE]") {
+                        // 接收到结束标记，发送最终完成通知
+                        val finalResponse = StreamChatResponse(
+                            content = "",
+                            done = true,
+                            sessionId = request.sessionId,
+                            provider = llmService.getProviderName(),
+                            model = request.model
+                        )
+                        responseHandler(finalResponse, true)
+                    } else {
+                        // 正常内容块
+                        val response = StreamChatResponse(
+                            content = chunk,
+                            done = false,
+                            sessionId = request.sessionId,
+                            provider = llmService.getProviderName(),
+                            model = request.model,
+                        )
+                        responseHandler(response, false)
+                    }
                 }
             }else{
                 logger.info("服务商不支持真实流式，使用传统分块方式")
 
-                llmService.chatStreamList(llmRequest).collect{chunk->
+                llmService.chatStreamList(llmRequest)
+                    .catch { e ->
+                        logger.error("传统流式处理异常", e)
+                        // 发送错误响应并标记为完成
+                        val errorResponse = StreamChatResponse(
+                            content = "流式处理异常: ${e.message}",
+                            done = true,
+                            sessionId = request.sessionId,
+                            provider = llmService.getProviderName(),
+                            model = request.model
+                        )
+                        responseHandler(errorResponse, true)
+                    }
+                    .collect{chunk->
                     val response = StreamChatResponse(
                         content = chunk,
                         sessionId = request.sessionId,

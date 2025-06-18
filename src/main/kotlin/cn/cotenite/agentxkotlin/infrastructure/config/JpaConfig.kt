@@ -1,5 +1,6 @@
 package cn.cotenite.agentxkotlin.infrastructure.config
 
+import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.FilterType
@@ -22,6 +23,18 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
             type = FilterType.REGEX,
             pattern = [".*JpaRepository"]
         )
+    ]
+)
+@EntityScan(
+    basePackages = [
+        "cn.cotenite.agentxkotlin.domain.agent.model",
+        "cn.cotenite.agentxkotlin.domain.conversation.model"
+    ]
+)
+@ComponentScan(
+    basePackages = [
+        "cn.cotenite.agentxkotlin.domain.agent.model.converter",
+        "cn.cotenite.agentxkotlin.domain.conversation.model.converter"
     ]
 )
 @EnableTransactionManagement

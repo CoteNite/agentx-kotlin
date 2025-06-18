@@ -2,6 +2,8 @@ package cn.cotenite.agentxkotlin.domain.conversation.model
 
 import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.*
 
@@ -74,16 +76,16 @@ data class Message(
      * 消息元数据 (JSONB 类型)
      * 数据库: NULLABLE
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
-    @Convert(converter = StringConverter::class)
     val metadata: String? = null,
 
     /**
      * 消息中包含的文件URL列表 (JSONB 类型)
      * 数据库: NULLABLE
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "file_urls", columnDefinition = "jsonb")
-    @Convert(converter = StringConverter::class)
     val fileUrls: String? = null,
 
     /**

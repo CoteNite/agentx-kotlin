@@ -121,7 +121,7 @@ class PortalConversationController(
     @GetMapping("/chat/stream")
     fun chatStreamGet(
         @RequestParam("message") message: String,
-        @RequestParam(value = "model") model: String,
+        @RequestParam(value = "model", required = false) model: String?,
         @RequestParam(value = "provider", required = false) provider: String?,
         @RequestParam(value = "sessionId", required = false) sessionId: String?
     ): SseEmitter {
@@ -132,7 +132,7 @@ class PortalConversationController(
             message = message,
             provider =  provider ?: "siliconflow",
             sessionId = sessionId?:"",
-            model = model,
+            model = model?:"",
         )
 
         // 调用POST方法处理

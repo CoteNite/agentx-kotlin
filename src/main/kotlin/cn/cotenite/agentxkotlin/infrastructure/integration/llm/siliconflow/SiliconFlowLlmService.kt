@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flowOn
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -190,79 +190,78 @@ class SiliconFlowLlmService(
     }
 
     private fun sendStreamHttpRequest(requestBody: String): Flow<String> = flow {
-        withContext(Dispatchers.IO){
-            val requestConfig = RequestConfig.custom()
-                .setConnectTimeout(time)
-                .setSocketTimeout(time)
-                .build()
+        val requestConfig = RequestConfig.custom()
+            .setConnectTimeout(time)
+            .setSocketTimeout(time)
+            .build()
 
-            val httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(requestConfig)
-                .build()
+        val httpClient = HttpClients.custom()
+            .setDefaultRequestConfig(requestConfig)
+            .build()
 
-            val httpPost = HttpPost(apiUrl)
-            httpPost.setHeader("Content-Type", "application/json")
-            httpPost.setHeader("Authorization", "Bearer $apiKey")
+        val httpPost = HttpPost(apiUrl)
+        httpPost.setHeader("Content-Type", "application/json")
+        httpPost.setHeader("Authorization", "Bearer $apiKey")
 
-            val entity = StringEntity(requestBody, ContentType.APPLICATION_JSON)
-            httpPost.entity = entity
+        val entity = StringEntity(requestBody, ContentType.APPLICATION_JSON)
+        httpPost.entity = entity
 
-            logger.debug("发送http请求到$apiUrl")
+        logger.debug("发送http请求到$apiUrl")
 
-            try {
-                httpClient.execute(httpPost).use { response ->
-                    val statusCode = response.statusLine.statusCode
-                    logger.debug("HTTP响应的状态码为$statusCode")
+        try {
+            httpClient.execute(httpPost).use { response ->
+                val statusCode = response.statusLine.statusCode
+                logger.debug("HTTP响应的状态码为$statusCode")
 
-                    if (statusCode!=200){
-                        logger.error("HTTP响应失败，状态码为$statusCode")
-                        emit("HTTP响应失败，状态码为$statusCode")
-                         return@withContext
-                    }
+                if (statusCode!=200){
+                    logger.error("HTTP响应失败，状态码为$statusCode")
+                    emit("HTTP响应失败，状态码为$statusCode")
+                     return@flow
+                }
 
-                    response.entity.content.bufferedReader().use { reader ->
-                        var line:String?
-                        while (reader.readLine().also { line = it } != null) {
-                            line?.let { currentLine->
-                                if (currentLine.startsWith("data: ")){
-                                    val data=currentLine.substring(6)
+                response.entity.content.bufferedReader().use { reader ->
+                    var line:String?
+                    while (reader.readLine().also { line = it } != null) {
+                        line?.let { currentLine->
+                            if (currentLine.startsWith("data: ")){
+                                val data=currentLine.substring(6)
 
-                                    if ("[DONE]"==data){
-                                        logger.info("接收到[DONE]，结束请求")
-                                        return@withContext
-                                    }
+                                if ("[DONE]"==data){
+                                    logger.info("接收到[DONE]，流式响应结束")
+                                    emit("[DONE]")
+                                    return@flow
+                                }
 
-                                    try {
-                                        val jsonData=JSON.parseObject(data)
-                                        if (jsonData.containsKey("choices") && !jsonData.getJSONArray("choices").isEmpty()){
-                                            val choice = jsonData.getJSONArray("choices").getJSONObject(0)
+                                try {
+                                    val jsonData=JSON.parseObject(data)
+                                    if (jsonData.containsKey("choices") && !jsonData.getJSONArray("choices").isEmpty()){
+                                        val choice = jsonData.getJSONArray("choices").getJSONObject(0)
 
-                                            if (choice.containsKey("delta")) {
-                                                val delta = choice.getJSONObject("delta")
+                                        if (choice.containsKey("delta")) {
+                                            val delta = choice.getJSONObject("delta")
 
-                                                if (delta.containsKey("content")) {
-                                                    val content = delta.getString("content")
-                                                    if (content != null) {
-                                                        emit(content)
-                                                    }
+                                            if (delta.containsKey("content")) {
+                                                val content = delta.getString("content")
+                                                if (content != null) {
+                                                    emit(content)
                                                 }
                                             }
                                         }
-                                    }catch (e: Exception){
-                                        logger.error("解析流式响应JSON出错", e)
-                                        emit("解析响应出错: ${e.message}")
                                     }
+                                }catch (e: Exception){
+                                    logger.error("解析流式响应JSON出错", e)
+                                    emit("解析响应出错: ${e.message}")
                                 }
                             }
                         }
                     }
                 }
-            }catch (e: Exception) {
-                logger.error("HTTP请求执行出错", e)
-                emit("HTTP请求执行出错: ${e.message}")
             }
+        }catch (e: Exception) {
+            logger.error("HTTP请求执行出错", e)
+            emit("HTTP请求执行出错: ${e.message}")
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
 
 

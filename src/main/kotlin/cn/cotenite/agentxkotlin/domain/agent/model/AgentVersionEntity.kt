@@ -1,10 +1,8 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
-import cn.cotenite.agentxkotlin.domain.agent.model.converter.ModelConfigConverter
-import cn.cotenite.agentxkotlin.domain.agent.model.converter.AgentToolListConverter
-import cn.cotenite.agentxkotlin.domain.agent.model.converter.StringListConverter
-import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 
 /**
@@ -70,22 +68,22 @@ class AgentVersionEntity(
     /**
      * 模型配置，包含模型类型、温度等参数
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "model_config", columnDefinition = "jsonb")
-    @Convert(converter = ModelConfigConverter::class)
     var modelConfig: ModelConfig? = ModelConfig(),
 
     /**
      * Agent可使用的工具列表
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tools", columnDefinition = "jsonb")
-    @Convert(converter = AgentToolListConverter::class)
     var tools: MutableList<AgentTool>? = mutableListOf(),
 
     /**
      * 关联的知识库ID列表
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "knowledge_base_ids", columnDefinition = "jsonb")
-    @Convert(converter = StringListConverter::class)
     var knowledgeBaseIds: MutableList<String>? = mutableListOf(),
 
     /**
@@ -133,8 +131,8 @@ class AgentVersionEntity(
     /**
      * 工具预设参数
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tool_preset_params", columnDefinition = "jsonb")
-    @Convert(converter = StringConverter::class)
     var toolPresetParams: String? = null,
 
     /**

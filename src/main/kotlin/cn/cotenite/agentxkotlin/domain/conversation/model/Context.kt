@@ -3,6 +3,8 @@ package cn.cotenite.agentxkotlin.domain.conversation.model
 import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
 import com.alibaba.fastjson2.JSON
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.*
 
@@ -32,8 +34,8 @@ data class Context(
      * 活跃消息列表 (JSONB 类型)
      * 数据库中为 NULLABLE
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "active_messages", columnDefinition = "jsonb")
-    @Convert(converter = StringConverter::class)
     var activeMessages: String? = null,
 
     /**

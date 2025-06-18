@@ -9,6 +9,7 @@ import cn.cotenite.agentxkotlin.domain.llm.service.LlmService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.catch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -89,22 +90,28 @@ class ConversationServiceImpl(
 
                 val fullResponse  = StringBuilder()
 
-                llmService.chatStreamList(request).collect{chunk->
-                    fullResponse.append(chunk)
-                    val response = StreamChatResponse(
-                        content=chunk,
-                        done = false,
-                        sessionId = sessionId,
-                        provider = llmService.getProviderName(),
-                        model = llmService.getDefaultModel(),
-                    )
-                    try {
-                        emitter.send(response)
-                    } catch (e: IOException) {
-                        emitter.completeWithError(e)
-                        throw RuntimeException(e)
+                llmService.chatStreamList(request)
+                    .catch { e ->
+                        log.error("Flow处理异常", e)
+                        emit("流处理异常: ${e.message}")
                     }
-                }
+                    .collect{chunk->
+                        fullResponse.append(chunk)
+                        val response = StreamChatResponse(
+                            content=chunk,
+                            done = false,
+                            sessionId = sessionId,
+                            provider = llmService.getProviderName(),
+                            model = llmService.getDefaultModel(),
+                        )
+                        try {
+                            emitter.send(response)
+                        } catch (e: IOException) {
+                            log.error("发送SSE响应失败", e)
+                            emitter.completeWithError(e)
+                            return@collect // 停止收集
+                        }
+                    }
                 val assistantMessageDTO = messageService.saveAssistantMessage(
                     sessionId = sessionId,
                     content=fullResponse.toString(),

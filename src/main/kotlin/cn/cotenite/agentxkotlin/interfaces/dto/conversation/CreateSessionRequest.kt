@@ -7,5 +7,5 @@ package cn.cotenite.agentxkotlin.interfaces.dto.conversation
  */
 data class CreateSessionRequest(
     val title:String,
-    val description:String
+    val description:String=""
 )

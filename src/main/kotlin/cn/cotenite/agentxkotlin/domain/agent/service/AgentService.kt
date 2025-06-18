@@ -156,6 +156,7 @@ class AgentServiceImpl(
         ValidationUtils.notEmpty(entity.name, "name")
         ValidationUtils.notEmpty(entity.userId, "userId")
 
+
         agentRepository.save(entity)
         return entity.toDTO()
     }

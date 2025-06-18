@@ -24,7 +24,7 @@ data class CreateAgentRequest(
     /**
      * Agent头像URL
      */
-    var avatar: String,
+    var avatar: String?,
 
     /**
      * Agent类型：默认是聊天助手

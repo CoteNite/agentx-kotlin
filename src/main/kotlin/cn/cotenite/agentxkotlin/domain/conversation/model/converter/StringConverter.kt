@@ -8,7 +8,7 @@ import jakarta.persistence.Converter
  * @Description String类型的JPA转换器，用于JSONB字段
  * @Date  2025/6/16
  */
-@Converter
+@Converter(autoApply = true)
 class StringConverter : AttributeConverter<String?, String?> {
     
     override fun convertToDatabaseColumn(attribute: String?): String? {

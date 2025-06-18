@@ -23,7 +23,7 @@ val jjwtVersion = "0.12.6"
 val httpclientVersion = "4.5.14"
 val fastjsonVersion = "2.0.48"
 val hutoolVersion = "5.8.25"
-val jacksonVersion = "2.15.3"
+val jacksonVersion = "2.19.0"
 
 
 dependencies {
@@ -52,6 +52,10 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+
+    // Jakarta JSON Binding
+    implementation("jakarta.json.bind:jakarta.json.bind-api:3.0.0")
+    implementation("org.eclipse:yasson:3.0.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 

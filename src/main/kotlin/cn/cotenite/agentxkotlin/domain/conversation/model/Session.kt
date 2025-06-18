@@ -2,6 +2,8 @@ package cn.cotenite.agentxkotlin.domain.conversation.model
 
 import cn.cotenite.agentxkotlin.domain.conversation.model.converter.StringConverter
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.*
 
@@ -59,8 +61,8 @@ data class Session(
      * 会话元数据，可存储其他自定义信息 (JSONB 类型)
      * 数据库中为 NULLABLE
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
-    @Convert(converter = StringConverter::class)
     var metadata: String? = null,
 
     /**
