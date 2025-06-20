@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.interfaces.dto.agent
 
-import cn.cotenite.agentxkotlin.domain.agent.model.PublishStatus
-import cn.cotenite.agentxkotlin.domain.common.exception.ParamValidationException
-import cn.cotenite.agentxkotlin.domain.common.util.ValidationUtils
+import cn.cotenite.agentxkotlin.domain.agent.constant.PublishStatus
+import cn.cotenite.agentxkotlin.infrastructure.exception.ParamValidationException
+import cn.cotenite.agentxkotlin.infrastructure.util.ValidationUtils
 
 
 /**

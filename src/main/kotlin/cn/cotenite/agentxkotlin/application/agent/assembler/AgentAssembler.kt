@@ -1,5 +1,7 @@
 package cn.cotenite.agentxkotlin.application.agent.assembler
 
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentDTO
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
 import cn.cotenite.agentxkotlin.domain.agent.model.*
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.CreateAgentRequest
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.PublishAgentVersionRequest
@@ -12,9 +14,9 @@ import java.time.LocalDateTime
  * @Description
  * @Date  2025/6/16 02:49
  */
-class AgentAssembler {
+object AgentAssembler {
 
-    companion object {
+
         /**
          * 将CreateAgentRequest转换为AgentEntity
          */
@@ -70,8 +72,8 @@ class AgentAssembler {
         /**
          * 将AgentEntity转换为AgentDTO
          */
-        fun toDTO(entity: AgentEntity?): AgentDTO? {
-            return entity?.let {
+        fun toDTO(entity: AgentEntity): AgentDTO {
+            return entity.let {
                 AgentDTO(
                     id = it.id,
                     name = it.name,
@@ -126,17 +128,15 @@ class AgentAssembler {
         /**
          * 将AgentEntity列表转换为AgentDTO列表
          */
-        fun toDTOList(entities: List<AgentEntity?>?): List<AgentDTO?> {
-            // 使用 Kotlin 的 mapNotNull 和 Elvis 操作符简化
-            return entities?.mapNotNull { toDTO(it) } ?: emptyList()
+        fun toDTOList(entities: List<AgentEntity>): List<AgentDTO?> {
+            return entities.map { toDTO(it) }
         }
 
         /**
          * 将AgentVersionEntity列表转换为AgentVersionDTO列表
          */
-        fun toVersionDTOList(entities: List<AgentVersionEntity?>?): List<AgentVersionDTO?> {
-            // 使用 Kotlin 的 mapNotNull 和 Elvis 操作符简化
-            return entities?.mapNotNull { toDTO(it) } ?: emptyList()
+        fun toVersionDTOList(entities: List<AgentVersionEntity>): List<AgentVersionDTO?> {
+            return entities.mapNotNull { toDTO(it) }
         }
-    }
+
 }

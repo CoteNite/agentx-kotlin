@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.interfaces.api.portal.agent
 
 import cn.cotenite.agentxkotlin.application.agent.service.AgentAppService
-import cn.cotenite.agentxkotlin.domain.agent.model.AgentDTO
-import cn.cotenite.agentxkotlin.domain.agent.model.AgentVersionDTO
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentDTO
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
 import cn.cotenite.agentxkotlin.infrastructure.auth.UserContext
 import cn.cotenite.agentxkotlin.interfaces.api.common.Response
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.CreateAgentRequest

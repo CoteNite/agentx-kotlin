@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.interfaces.api.admin
 
 import cn.cotenite.agentxkotlin.application.agent.service.AgentAppService
-import cn.cotenite.agentxkotlin.domain.agent.model.AgentVersionDTO
-import cn.cotenite.agentxkotlin.domain.agent.model.PublishStatus
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
+import cn.cotenite.agentxkotlin.domain.agent.constant.PublishStatus
 import cn.cotenite.agentxkotlin.interfaces.api.common.Response
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.ReviewAgentVersionRequest
 import org.springframework.web.bind.annotation.*

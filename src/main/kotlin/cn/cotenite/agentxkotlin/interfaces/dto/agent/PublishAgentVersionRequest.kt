@@ -1,6 +1,6 @@
 package cn.cotenite.agentxkotlin.interfaces.dto.agent
 
-import cn.cotenite.agentxkotlin.domain.common.exception.ParamValidationException
+import cn.cotenite.agentxkotlin.infrastructure.exception.ParamValidationException
 import java.util.regex.Pattern
 
 

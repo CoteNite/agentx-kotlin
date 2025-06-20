@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.domain.conversation.service
 
-import cn.cotenite.agentxkotlin.domain.common.exception.EntityNotFoundException
-import cn.cotenite.agentxkotlin.domain.conversation.model.Message
-import cn.cotenite.agentxkotlin.domain.conversation.model.MessageDTO
+import cn.cotenite.agentxkotlin.infrastructure.exception.EntityNotFoundException
+import cn.cotenite.agentxkotlin.domain.conversation.model.MessageEntity
+import cn.cotenite.agentxkotlin.domain.conversation.dto.MessageDTO
 import cn.cotenite.agentxkotlin.domain.conversation.repository.MessageRepository
 import cn.cotenite.agentxkotlin.domain.conversation.repository.SessionRepository
 import org.springframework.data.repository.findByIdOrNull
@@ -73,8 +73,8 @@ class MessageServiceImpl(
         val session = sessionRepository.findByIdOrNull(sessionId) 
             ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
-        val message = Message.createUserMessage(sessionId, content)
-        val savedMessage = messageRepository.save(message)
+        val messageEntity = MessageEntity.createUserMessage(sessionId, content)
+        val savedMessage = messageRepository.save(messageEntity)
 
         // 更新会话最后更新时间
         session.updatedAt = LocalDateTime.now()
@@ -99,8 +99,8 @@ class MessageServiceImpl(
             ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
         // 创建并保存助手消息
-        val message = Message.createAssistantMessage(sessionId, content, provider, model, tokenCount)
-        val savedMessage = messageRepository.save(message)
+        val messageEntity = MessageEntity.createAssistantMessage(sessionId, content, provider, model, tokenCount)
+        val savedMessage = messageRepository.save(messageEntity)
 
         // 更新会话最后更新时间
         session.updatedAt = LocalDateTime.now()
@@ -117,8 +117,8 @@ class MessageServiceImpl(
         val session = sessionRepository.findByIdOrNull(sessionId) 
             ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
-        val message = Message.createSystemMessage(sessionId, content)
-        val savedMessage = messageRepository.save(message)
+        val messageEntity = MessageEntity.createSystemMessage(sessionId, content)
+        val savedMessage = messageRepository.save(messageEntity)
 
         contextService.addMessageToContext(sessionId, savedMessage.id)
 
@@ -130,7 +130,7 @@ class MessageServiceImpl(
             ?: throw EntityNotFoundException("会话不存在: $sessionId")
 
         return messageRepository.findBySessionIdAndDeletedAtIsNullOrderByCreatedAtAsc(sessionId)
-            .map(Message::toDTO)
+            .map(MessageEntity::toDTO)
     }
 
     override fun getRecentMessages(sessionId: String, count: Int): List<MessageDTO> {

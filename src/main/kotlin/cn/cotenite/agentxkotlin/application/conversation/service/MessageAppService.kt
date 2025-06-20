@@ -1,6 +1,6 @@
 package cn.cotenite.agentxkotlin.application.conversation.service
 
-import cn.cotenite.agentxkotlin.domain.conversation.model.MessageDTO
+import cn.cotenite.agentxkotlin.domain.conversation.dto.MessageDTO
 import cn.cotenite.agentxkotlin.domain.conversation.service.MessageService
 import org.springframework.stereotype.Service
 

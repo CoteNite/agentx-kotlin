@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.infrastructure.config
 
-import cn.cotenite.agentxkotlin.domain.common.exception.BusinessException
-import cn.cotenite.agentxkotlin.domain.common.exception.EntityNotFoundException
-import cn.cotenite.agentxkotlin.domain.common.exception.ParamValidationException
+import cn.cotenite.agentxkotlin.infrastructure.exception.BusinessException
+import cn.cotenite.agentxkotlin.infrastructure.exception.EntityNotFoundException
+import cn.cotenite.agentxkotlin.infrastructure.exception.ParamValidationException
 import cn.cotenite.agentxkotlin.interfaces.api.common.Response
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory

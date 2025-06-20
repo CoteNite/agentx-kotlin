@@ -1,5 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
+import cn.cotenite.agentxkotlin.domain.agent.constant.PublishStatus
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -15,7 +17,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "agent_versions")
-class AgentVersionEntity(
+open class AgentVersionEntity(
     /**
      * 版本唯一ID
      */

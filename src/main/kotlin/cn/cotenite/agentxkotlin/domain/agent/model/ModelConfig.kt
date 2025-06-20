@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
  * @Date  2025/6/16 02:57
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class ModelConfig(
+open class ModelConfig(
     val modelName:String="gpt-3.5-turbo",
     val temperature:Double=0.7,
     val topP:Double=1.0,

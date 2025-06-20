@@ -3,8 +3,8 @@ package cn.cotenite.agentxkotlin.interfaces.api.portal.conversation
 import cn.cotenite.agentxkotlin.application.conversation.service.ConversationAppService
 import cn.cotenite.agentxkotlin.application.conversation.service.MessageAppService
 import cn.cotenite.agentxkotlin.application.conversation.service.SessionAppService
-import cn.cotenite.agentxkotlin.domain.conversation.model.MessageDTO
-import cn.cotenite.agentxkotlin.domain.conversation.model.SessionDTO
+import cn.cotenite.agentxkotlin.domain.conversation.dto.MessageDTO
+import cn.cotenite.agentxkotlin.domain.conversation.dto.SessionDTO
 import cn.cotenite.agentxkotlin.infrastructure.auth.UserContext
 import cn.cotenite.agentxkotlin.interfaces.api.common.Response
 import cn.cotenite.agentxkotlin.interfaces.dto.conversation.CreateAndChatRequest

@@ -1,5 +1,6 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentDTO
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -13,7 +14,7 @@ import java.util.UUID
  */
 @Entity
 @Table(name = "agents")
-data class AgentEntity(
+open class AgentEntity(
     /**
      * Agent 唯一ID
      */

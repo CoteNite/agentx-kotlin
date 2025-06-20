@@ -2,7 +2,7 @@ package cn.cotenite.agentxkotlin.interfaces.dto.agent
 
 import cn.cotenite.agentxkotlin.domain.agent.model.AgentTool
 import cn.cotenite.agentxkotlin.domain.agent.model.ModelConfig
-import cn.cotenite.agentxkotlin.domain.common.util.ValidationUtils
+import cn.cotenite.agentxkotlin.infrastructure.util.ValidationUtils
 
 /**
  * @Author  RichardYoung

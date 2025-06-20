@@ -1,8 +1,8 @@
 package cn.cotenite.agentxkotlin.domain.conversation.service
 
 
-import cn.cotenite.agentxkotlin.domain.conversation.model.Context
-import cn.cotenite.agentxkotlin.domain.conversation.model.Message
+import cn.cotenite.agentxkotlin.domain.conversation.model.ContextEntity
+import cn.cotenite.agentxkotlin.domain.conversation.model.MessageEntity
 import cn.cotenite.agentxkotlin.domain.conversation.repository.ContextRepository
 import cn.cotenite.agentxkotlin.domain.conversation.repository.MessageRepository
 import org.springframework.data.repository.findByIdOrNull
@@ -21,7 +21,7 @@ interface ContextService {
     /**
      * 获取会话上下文(活跃消息)
      */
-    fun getContextMessages(sessionId: String): MutableList<Message>
+    fun getContextMessages(sessionId: String): MutableList<MessageEntity>
 
     /**
      * 添加消息到上下文
@@ -61,7 +61,7 @@ class ContextServiceImpl(
         const val DEFAULT_CONTEXT_SIZE: Int = 10
     }
 
-    override fun getContextMessages(sessionId: String): MutableList<Message> {
+    override fun getContextMessages(sessionId: String): MutableList<MessageEntity> {
         val context = this.getOrCreateContext(sessionId)
         val messageIds: List<String> = context.getActiveMessageIds()
 
@@ -69,27 +69,27 @@ class ContextServiceImpl(
             return mutableListOf()
         }
 
-        val messages: MutableList<Message> = mutableListOf()
+        val messageEntities: MutableList<MessageEntity> = mutableListOf()
         messageIds.forEach { id ->
             val message = messageRepository.findByIdOrNull(id)
             if (message != null) {
-                messages.add(message)
+                messageEntities.add(message)
             }
         }
 
-        return messages
+        return messageEntities
     }
 
-    private fun getOrCreateContext(sessionId: String): Context {
-        val context: Context? = contextRepository.findBySessionIdAndDeletedAtIsNull(sessionId)
+    private fun getOrCreateContext(sessionId: String): ContextEntity {
+        val contextEntity: ContextEntity? = contextRepository.findBySessionIdAndDeletedAtIsNull(sessionId)
 
-        if (context == null) {
-            val newContext = Context.createNew(sessionId)
-            contextRepository.save(newContext)
-            return newContext
+        if (contextEntity == null) {
+            val newContextEntity = ContextEntity.createNew(sessionId)
+            contextRepository.save(newContextEntity)
+            return newContextEntity
         }
 
-        return context
+        return contextEntity
     }
 
     @Transactional
@@ -131,8 +131,8 @@ class ContextServiceImpl(
         val existingContext = contextRepository.findBySessionIdAndDeletedAtIsNull(sessionId)
 
         if (existingContext == null) {
-            val newContext = Context.createNew(sessionId)
-            contextRepository.save(newContext)
+            val newContextEntity = ContextEntity.createNew(sessionId)
+            contextRepository.save(newContextEntity)
         }
     }
 

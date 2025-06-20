@@ -1,11 +1,11 @@
 package cn.cotenite.agentxkotlin.application.agent.service
 
 import cn.cotenite.agentxkotlin.application.agent.assembler.AgentAssembler
-import cn.cotenite.agentxkotlin.domain.agent.model.AgentDTO
-import cn.cotenite.agentxkotlin.domain.agent.model.AgentVersionDTO
-import cn.cotenite.agentxkotlin.domain.agent.model.PublishStatus
-import cn.cotenite.agentxkotlin.domain.agent.service.AgentService
-import cn.cotenite.agentxkotlin.domain.common.exception.ParamValidationException
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentDTO
+import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
+import cn.cotenite.agentxkotlin.domain.agent.constant.PublishStatus
+import cn.cotenite.agentxkotlin.domain.agent.service.AgentDomainService
+import cn.cotenite.agentxkotlin.infrastructure.exception.ParamValidationException
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.*
 import org.springframework.stereotype.Service
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class AgentAppService(
-    private val agentService: AgentService
+    private val agentDomainService: AgentDomainService
 ){
     /**
      * 创建新Agent
@@ -30,35 +30,35 @@ class AgentAppService(
         val entity = AgentAssembler.toEntity(request, userId)
 
         // 调用领域服务
-        return agentService.createAgent(entity)
+        return agentDomainService.createAgent(entity)
     }
 
     /**
      * 获取Agent信息
      */
     fun getAgent(agentId: String, userId: String): AgentDTO {
-        return agentService.getAgent(agentId, userId)
+        return agentDomainService.getAgent(agentId, userId)
     }
 
     /**
      * 获取用户的Agent列表，支持状态和名称过滤
      */
     fun getUserAgents(userId: String, searchAgentsRequest: SearchAgentsRequest): List<AgentDTO> {
-        return agentService.getUserAgents(userId, searchAgentsRequest)
+        return agentDomainService.getUserAgents(userId, searchAgentsRequest)
     }
 
     /**
      * 获取已上架的Agent列表，支持名称搜索
      */
     fun getPublishedAgentsByName(searchAgentsRequest: SearchAgentsRequest): List<AgentVersionDTO> {
-        return agentService.getPublishedAgentsByName(searchAgentsRequest)
+        return agentDomainService.getPublishedAgentsByName(searchAgentsRequest)
     }
 
     /**
      * 获取待审核的Agent列表
      */
     fun getPendingReviewAgents(): List<AgentDTO> {
-        return agentService.getPendingReviewAgents()
+        return agentDomainService.getPendingReviewAgents()
     }
 
     /**
@@ -71,21 +71,21 @@ class AgentAppService(
         // 使用组装器创建更新实体
         val updateEntity = AgentAssembler.toEntity(request, userId)
         // 调用领域服务更新Agent
-        return agentService.updateAgent(agentId, updateEntity)
+        return agentDomainService.updateAgent(agentId, updateEntity)
     }
 
     /**
      * 切换Agent的启用/禁用状态
      */
     fun toggleAgentStatus(agentId: String): AgentDTO {
-        return agentService.toggleAgentStatus(agentId)
+        return agentDomainService.toggleAgentStatus(agentId)
     }
 
     /**
      * 删除Agent
      */
     fun deleteAgent(agentId: String, userId: String) {
-        agentService.deleteAgent(agentId, userId)
+        agentDomainService.deleteAgent(agentId, userId)
     }
 
     /**
@@ -96,10 +96,10 @@ class AgentAppService(
         request.validate()
 
         // 获取当前Agent
-        val currentAgentDTO = agentService.getAgent(agentId, userId)
+        val currentAgentDTO = agentDomainService.getAgent(agentId, userId)
 
         // 获取最新版本，检查版本号大小
-        val latestVersion = agentService.getLatestAgentVersion(agentId)
+        val latestVersion = agentDomainService.getLatestAgentVersion(agentId)
         if (latestVersion != null) {
             // 检查版本号是否大于上一个版本
             if (!request.isVersionGreaterThan(latestVersion.versionNumber)) {
@@ -116,28 +116,28 @@ class AgentAppService(
 
         versionEntity.userId = userId
         // 调用领域服务发布版本
-        return agentService.publishAgentVersion(agentId, versionEntity)
+        return agentDomainService.publishAgentVersion(agentId, versionEntity)
     }
 
     /**
      * 获取Agent的所有版本
      */
     fun getAgentVersions(agentId: String, userId: String): List<AgentVersionDTO> {
-        return agentService.getAgentVersions(agentId, userId)
+        return agentDomainService.getAgentVersions(agentId, userId)
     }
 
     /**
      * 获取Agent的特定版本
      */
     fun getAgentVersion(agentId: String, versionNumber: String): AgentVersionDTO {
-        return agentService.getAgentVersion(agentId, versionNumber)
+        return agentDomainService.getAgentVersion(agentId, versionNumber)
     }
 
     /**
      * 获取Agent的最新版本
      */
     fun getLatestAgentVersion(agentId: String): AgentVersionDTO {
-        return agentService.getLatestAgentVersion(agentId)
+        return agentDomainService.getLatestAgentVersion(agentId)
     }
 
     /**
@@ -150,10 +150,10 @@ class AgentAppService(
         // 根据状态执行相应操作
         return if (PublishStatus.REJECTED == request.status) {
             // 拒绝发布，需使用拒绝原因
-            agentService.rejectVersion(versionId, request.rejectReason!!)
+            agentDomainService.rejectVersion(versionId, request.rejectReason!!)
         } else {
             // 其他状态变更，直接更新状态
-            agentService.updateVersionPublishStatus(versionId, request.status)
+            agentDomainService.updateVersionPublishStatus(versionId, request.status)
         }
     }
 
@@ -164,6 +164,6 @@ class AgentAppService(
      * @return 版本列表（每个助理只返回最新版本）
      */
     fun getVersionsByStatus(status: PublishStatus): List<AgentVersionDTO> {
-        return agentService.getVersionsByStatus(status)
+        return agentDomainService.getVersionsByStatus(status)
     }
 }
