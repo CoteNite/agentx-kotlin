@@ -1,10 +1,9 @@
 package cn.cotenite.agentxkotlin.domain.token.service.factory
 
 import cn.cotenite.agentxkotlin.domain.token.model.config.TokenOverflowConfig
-import cn.cotenite.agentxkotlin.domain.token.model.enums.TokenOverflowStrategyEnum
-import cn.cotenite.agentxkotlin.domain.token.model.enums.TokenOverflowStrategyEnum.*
+import cn.cotenite.agentxkotlin.domain.sahred.enums.TokenOverflowStrategyEnum
+import cn.cotenite.agentxkotlin.domain.sahred.enums.TokenOverflowStrategyEnum.*
 import cn.cotenite.agentxkotlin.domain.token.service.TokenOverflowStrategy
-import cn.cotenite.agentxkotlin.domain.token.service.factory.TokenOverflowStrategyFactory.createStrategy
 import cn.cotenite.agentxkotlin.domain.token.service.impl.NoTokenOverflowStrategy
 import cn.cotenite.agentxkotlin.domain.token.service.impl.SlidingWindowTokenOverflowStrategy
 import cn.cotenite.agentxkotlin.domain.token.service.impl.SummarizeTokenOverflowStrategy

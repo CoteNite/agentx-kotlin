@@ -18,7 +18,7 @@ open class BaseEntity {
 
     // 创建时间
     @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime? = null
+    var createdAt: LocalDateTime = LocalDateTime.now()
 
     @PrePersist // 在实体持久化（插入）之前调用
     protected fun onCreate() {
@@ -27,7 +27,7 @@ open class BaseEntity {
 
     // 更新时间
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime? = null
+    var updatedAt: LocalDateTime = LocalDateTime.now()
 
     @PreUpdate // 在实体更新之前调用
     protected fun onUpdate() {

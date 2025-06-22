@@ -25,17 +25,17 @@ open class ProviderEntity(
     @field:Id // 标记为主键
     @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
     @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性
-    var id: String? = null,
+    var id: String = "",
 
     @field:Column(name = "user_id") // 用户ID可以为空，表示官方提供商
     var userId: String? = null,
 
     @field:Column(name = "protocol", nullable = false) // 协议类型
     @Convert(converter = ProviderProtocolConverter::class)
-    var protocol: ProviderProtocol? = null,
+    var protocol: ProviderProtocol,
 
     @field:Column(name = "name", nullable = false, length = 255) // 名称
-    var name: String? = null,
+    var name: String = "",
 
     @field:Column(name = "description", length = 512) // 描述
     var description: String? = null,
@@ -50,12 +50,7 @@ open class ProviderEntity(
     @field:Column(name = "status", nullable = false) // 状态（激活/禁用）
     var status: Boolean = true // 默认激活
 
-) : BaseEntity() { // 继承BaseEntity，BaseEntity应使用 @MappedSuperclass
-
-    // JPA要求实体类有无参构造函数。
-    // 如果你使用了 'kotlin-noarg' Gradle 插件并正确配置，通常不需要手动编写。
-
-    // equals() 和 hashCode() 的实现对于JPA实体至关重要
+) : BaseEntity() {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false

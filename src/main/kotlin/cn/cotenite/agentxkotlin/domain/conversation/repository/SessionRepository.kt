@@ -2,6 +2,7 @@ package cn.cotenite.agentxkotlin.domain.conversation.repository
 
 import cn.cotenite.agentxkotlin.domain.conversation.model.SessionEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -14,7 +15,7 @@ import java.time.LocalDateTime
  * @Date  2025/6/16 17:30
  */
 @Repository
-interface SessionRepository : JpaRepository<SessionEntity, String> {
+interface SessionRepository : JpaRepository<SessionEntity, String>, JpaSpecificationExecutor<SessionEntity>{
 
     /**
      * 根据AgentID查找未删除的会话，按创建时间降序排列
@@ -25,11 +26,6 @@ interface SessionRepository : JpaRepository<SessionEntity, String> {
      * 根据ID和用户ID查找未删除的会话
      */
     fun findByIdAndUserIdAndDeletedAtIsNull(id: String, userId: String): SessionEntity?
-
-    /**
-     * 根据ID列表查找未删除的会话
-     */
-    fun findByIdInAndDeletedAtIsNull(ids: List<String>): List<SessionEntity>
 
     /**
      * 软删除指定ID和用户ID的会话

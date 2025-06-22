@@ -1,5 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
+import cn.cotenite.agentxkotlin.domain.llm.model.config.LLMModelConfig
+import cn.cotenite.agentxkotlin.infrastructure.converter.LLMModelConfigConverter
 import cn.cotenite.agentxkotlin.infrastructure.entity.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
@@ -48,7 +50,11 @@ open class AgentWorkspaceEntity(
      * 模型id
      */
     @field:Column(name = "model_id")
-    var modelId: String? = null
+    var modelId: String? = null,
+
+    @field:Column(name = "llm_model_config", columnDefinition = "jsonb")
+    @field:Convert(converter = LLMModelConfigConverter::class)
+    var llmModelConfig: LLMModelConfig
 ) : BaseEntity() { // 继承BaseEntity，BaseEntity应使用 @MappedSuperclass
 
     override fun equals(other: Any?): Boolean {

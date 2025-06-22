@@ -1,6 +1,7 @@
 package cn.cotenite.agentxkotlin.domain.token.model.config
 
-import cn.cotenite.agentxkotlin.domain.token.model.enums.TokenOverflowStrategyEnum
+import cn.cotenite.agentxkotlin.domain.sahred.enums.TokenOverflowStrategyEnum
+import cn.cotenite.agentxkotlin.infrastructure.llm.config.ProviderConfig
 import org.springframework.stereotype.Service
 
 /**
@@ -29,7 +30,9 @@ data class TokenOverflowConfig(
     /**
      * 摘要触发阈值（消息数量），适用于摘要策略
      */
-    var summaryThreshold: Int? = null
+    var summaryThreshold: Int? = null,
+
+    var providerConfig: ProviderConfig? = null
 ) {
     /**
      * 创建默认的无策略配置

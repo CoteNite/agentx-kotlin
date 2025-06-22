@@ -3,7 +3,7 @@ package cn.cotenite.agentxkotlin.domain.token.service.impl
 import cn.cotenite.agentxkotlin.domain.token.model.TokenMessage
 import cn.cotenite.agentxkotlin.domain.token.model.TokenProcessResult
 import cn.cotenite.agentxkotlin.domain.token.model.config.TokenOverflowConfig
-import cn.cotenite.agentxkotlin.domain.token.model.enums.TokenOverflowStrategyEnum
+import cn.cotenite.agentxkotlin.domain.sahred.enums.TokenOverflowStrategyEnum
 import cn.cotenite.agentxkotlin.domain.token.service.TokenOverflowStrategy
 import org.springframework.stereotype.Service
 

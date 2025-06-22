@@ -36,13 +36,12 @@ class SessionDomainService(
     fun deleteSession(sessionId: String, userId: String) {
         val session = sessionRepository.findByIdAndUserIdAndDeletedAtIsNull(sessionId, userId)
             ?: throw BusinessException("会话不存在")
-        
+
         sessionRepository.softDeleteByIdAndUserId(sessionId, userId)
     }
 
     /**
      * 更新会话
-     *
      * @param sessionId 会话id
      * @param userId 用户id
      * @param title 标题
@@ -50,14 +49,13 @@ class SessionDomainService(
     fun updateSession(sessionId: String, userId: String, title: String) {
         val session = sessionRepository.findByIdAndUserIdAndDeletedAtIsNull(sessionId, userId)
             ?: throw BusinessException("会话不存在")
-        
+
         session.update(title,session.description)
         sessionRepository.save(session)
     }
 
     /**
      * 创建会话
-     *
      * @param agentId 助理id
      * @param userId 用户id
      * @return 创建的会话实体
@@ -73,7 +71,6 @@ class SessionDomainService(
 
     /**
      * 检查会话是否存在
-     *
      * @param sessionId 会话id
      * @param userId 用户id
      * @throws BusinessException 如果会话不存在
@@ -87,7 +84,6 @@ class SessionDomainService(
 
     /**
      * 查找会话
-     *
      * @param sessionId 会话id
      * @param userId 用户id
      * @return 会话实体，如果不存在返回null
@@ -107,7 +103,6 @@ class SessionDomainService(
 
     /**
      * 获取会话
-     *
      * @param sessionId 会话id
      * @param userId 用户id
      * @return 会话实体

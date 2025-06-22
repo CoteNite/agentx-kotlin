@@ -2,6 +2,7 @@ package cn.cotenite.agentxkotlin.domain.conversation.repository
 
 import cn.cotenite.agentxkotlin.domain.conversation.model.MessageEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -14,22 +15,7 @@ import java.time.LocalDateTime
  * @Date  2025/6/16 17:29
  */
 @Repository
-interface MessageRepository : JpaRepository<MessageEntity, String> {
-
-    /**
-     * 根据会话ID查找未删除的消息，按创建时间升序排列
-     */
-    fun findBySessionIdAndDeletedAtIsNullOrderByCreatedAtAsc(sessionId: String): List<MessageEntity>
-
-    /**
-     * 根据会话ID查找未删除的消息
-     */
-    fun findBySessionIdAndDeletedAtIsNull(sessionId: String): List<MessageEntity>
-
-    /**
-     * 根据会话ID列表查找未删除的消息
-     */
-    fun findBySessionIdInAndDeletedAtIsNull(sessionIds: List<String>): List<MessageEntity>
+interface MessageRepository : JpaRepository<MessageEntity, String>, JpaSpecificationExecutor<MessageEntity> {
 
     /**
      * 软删除指定会话的所有消息
@@ -44,4 +30,13 @@ interface MessageRepository : JpaRepository<MessageEntity, String> {
     @Modifying
     @Query("UPDATE MessageEntity m SET m.deletedAt = CURRENT_TIMESTAMP WHERE m.sessionId IN :sessionIds AND m.deletedAt IS NULL")
     fun softDeleteBySessionIdIn(@Param("sessionIds") sessionIds: List<String>)
+
+    @Modifying // 标记这是一个修改（删除/更新）操作
+    @Query("delete from MessageEntity m where m.sessionId = :sessionId")
+    fun deleteBySessionId(@Param("sessionId") sessionId: String) // 使用 @Param 绑定参数
+
+    @Modifying
+    @Query("delete from MessageEntity m where m.sessionId in :sessionIds")
+    fun deleteBySessionIds(@Param("sessionIds") sessionIds: List<String>)
+
 }

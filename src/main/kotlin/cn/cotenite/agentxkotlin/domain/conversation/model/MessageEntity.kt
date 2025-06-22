@@ -19,13 +19,13 @@ open class MessageEntity(
     @field:Id // 标记为主键
     @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
     @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性
-    var id: String? = null,
+    var id: String = "",
 
     /**
      * 所属会话ID
      */
     @field:Column(name = "session_id", nullable = false)
-    var sessionId: String? = null,
+    var sessionId: String ="",
 
     /**
      * 消息角色 (user, assistant, system)
@@ -33,7 +33,7 @@ open class MessageEntity(
      */
     @field:Column(name = "role", nullable = false)
     @Convert(converter = RoleConverter::class)
-    var role: Role? = null, // Role 类型通常不可为 null，但为了初始化可以暂时设为可空
+    var role: Role, // Role 类型通常不可为 null，但为了初始化可以暂时设为可空
 
     /**
      * 消息内容
@@ -71,11 +71,11 @@ open class MessageEntity(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         other as MessageEntity
-        return id != null && id == other.id
+        return id == other.id
     }
 
     override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
+        return id.hashCode()
     }
 
     override fun toString(): String {

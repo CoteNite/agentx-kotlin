@@ -1,6 +1,8 @@
 package cn.cotenite.agentxkotlin.infrastructure.llm.config
 
+import cn.cotenite.agentxkotlin.infrastructure.llm.protocol.enums.ProviderProtocol
 import com.fasterxml.jackson.annotation.JsonInclude
+import java.util.HashMap
 
 /**
  * @Author  RichardYoung
@@ -12,5 +14,6 @@ data class ProviderConfig(
     val apiKey: String,
     val baseUrl: String,
     val model: String,
-    val customHeaders : Map<String, String>,
+    val customHeaders : Map<String, String> = HashMap(),
+    val protocol: ProviderProtocol
 )

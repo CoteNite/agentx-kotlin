@@ -189,9 +189,6 @@ class LlmDomainService(
      */
     fun getProviderAggregate(providerId: String, userId: String): ProviderAggregate {
         val provider = getProvider(providerId, userId) // 获取服务商实体，会抛出 BusinessException
-        // 聚合根内部会自动通过 JPA 关联加载模型（如果配置了FetchType.EAGER或在聚合根中触发懒加载）
-        // 或者像 buildProviderAggregatesWithActiveModels 那样，显式查询并传入
-        // 这里直接构建，假定模型会在需要时由JPA自动加载
         return ProviderAggregate(provider)
     }
 

@@ -1,16 +1,23 @@
 package cn.cotenite.agentxkotlin.application.agent.service
 
 import cn.cotenite.agentxkotlin.application.agent.assembler.AgentAssembler
+import cn.cotenite.agentxkotlin.application.agent.assembler.AgentWorkspaceAssembler
 import cn.cotenite.agentxkotlin.application.agent.dto.AgentDTO
+import cn.cotenite.agentxkotlin.domain.agent.model.AgentEntity
 import cn.cotenite.agentxkotlin.domain.agent.model.AgentWorkspaceEntity
 import cn.cotenite.agentxkotlin.domain.agent.service.AgentDomainService
 import cn.cotenite.agentxkotlin.domain.agent.service.AgentWorkspaceDomainService
+import cn.cotenite.agentxkotlin.domain.conversation.model.SessionEntity
 import cn.cotenite.agentxkotlin.domain.conversation.service.ConversationDomainService
 import cn.cotenite.agentxkotlin.domain.conversation.service.SessionDomainService
+import cn.cotenite.agentxkotlin.domain.llm.model.config.LLMModelConfig
 import cn.cotenite.agentxkotlin.domain.llm.service.LlmDomainService
 import cn.cotenite.agentxkotlin.infrastructure.exception.BusinessException
+import cn.cotenite.agentxkotlin.interfaces.dto.agent.request.UpdateModelConfigRequest
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
+
 
 /**
  * @Author  RichardYoung
@@ -27,9 +34,9 @@ class AgentWorkspaceAppService(
 ){
 
     /**
-     * 獲取工作區下的助理
+     * 获取工作区下的助理
      *
-     * @param userId 用戶ID
+     * @param  userId 用户id
      * @return AgentDTO
      */
     fun getAgents(userId: String): List<AgentDTO> {
@@ -38,66 +45,59 @@ class AgentWorkspaceAppService(
     }
 
     /**
-     * 刪除工作區中的助理
-     * @param agentId 助理ID
-     * @param userId 用戶ID
+     * 删除工作区中的助理
+     * @param agentId 助理id
+     * @param userId 用户id
      */
     @Transactional
     fun deleteAgent(agentId: String, userId: String) {
+        // agent如果是自己的则不允许删除
 
-        // agent 如果是自己的則不允許刪除
         val agent = agentServiceDomainService.getAgentById(agentId)
-        // Kotlin 直接使用 == 比較內容， != 比較內容不相等，對於引用類型行為與 Java equals() 類似
         if (agent.userId == userId) {
-            throw BusinessException("該助理屬於自己，不允許刪除")
+            throw BusinessException("该助理属于自己，不允许删除")
         }
 
-        val deletedAgent = agentWorkspaceDomainService.deleteAgent(agentId, userId)
-        if (!deletedAgent) { // 直接判斷布林值
-            throw BusinessException("刪除助理失敗")
+        val deleteAgent = agentWorkspaceDomainService.deleteAgent(agentId, userId)
+        if (!deleteAgent) {
+            throw BusinessException("删除助理失败")
         }
-
-        val sessionIds = sessionDomainService.getSessionsByAgentId(agentId).mapNotNull { it.id }
-
+        val sessionIds =
+            sessionDomainService.getSessionsByAgentId(agentId).stream().map<String?>(SessionEntity::id).collect(
+                Collectors.toList()
+            )
         if (sessionIds.isEmpty()) {
             return
         }
-
         sessionDomainService.deleteSessions(sessionIds)
         conversationDomainService.deleteConversationMessages(sessionIds)
     }
 
-    /**
-     * 保存模型
-     * @param agentId Agent ID
-     * @param userId 用戶ID
-     * @param modelId 模型ID
-     */
-    fun saveModel(agentId: String, userId: String, modelId: String) {
 
-        // 模型是否是自己的 or 官方的
-        val model = llmDomainService.getModelById(modelId)
-        // 直接訪問布林屬性 isOfficial，並使用 || 運算符
-        if (!model.isOfficial && model.userId != userId) {
-            throw BusinessException("模型不存在或無權使用") // 更好的錯誤訊息
-        }
-
-        // 使用 Elvis 運算符簡化 findWorkspace 和新建物件的邏輯
-        val workspace = agentWorkspaceDomainService.findWorkspace(agentId, userId) ?: AgentWorkspaceEntity(
-            agentId = agentId,
-            userId = userId
-            // 其他屬性如果有默認值則可以省略，否則在此處賦值
-        )
-
-        workspace.modelId = modelId // 直接賦值
-        agentWorkspaceDomainService.save(workspace)
+    fun getConfiguredModelId(agentId: String, userId: String): LLMModelConfig {
+        return agentWorkspaceDomainService.getWorkspace(agentId, userId).llmModelConfig
     }
 
     /**
-     * 獲取配置的模型ID
+     * 保存agent的模型配置
+     * @param agentId agent ID
+     * @param userId 用户ID
+     * @param request 模型配置
      */
-    fun getConfiguredModelId(agentId: String, userId: String): String? { // 返回類型為 String? 以適應 getModelId() 可能返回 null 的情況
-        return agentWorkspaceDomainService.getWorkspace(agentId, userId).modelId
+    fun updateModelConfig(agentId: String, userId: String, request: UpdateModelConfigRequest) {
+        val llmModelConfig: LLMModelConfig = AgentWorkspaceAssembler.toLLMModelConfig(request)
+        val modelId = llmModelConfig.modelId?:throw BusinessException("模型ID不能为空")
+
+        // 激活校验
+        val model = llmDomainService.getModelById(modelId)
+        model.isActive()
+        val provider = llmDomainService.getProvider(
+            providerId = model.providerId,
+            userId = userId
+        )
+        provider.isActive()
+
+        agentWorkspaceDomainService.save(AgentWorkspaceEntity(agentId=agentId, userId = userId, llmModelConfig = llmModelConfig))
     }
 
 }

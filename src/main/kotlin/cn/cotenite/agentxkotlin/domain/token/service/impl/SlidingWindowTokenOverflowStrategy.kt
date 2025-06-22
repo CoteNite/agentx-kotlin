@@ -3,13 +3,11 @@ package cn.cotenite.agentxkotlin.domain.token.service.impl
 import cn.cotenite.agentxkotlin.domain.token.model.TokenMessage
 import cn.cotenite.agentxkotlin.domain.token.model.TokenProcessResult
 import cn.cotenite.agentxkotlin.domain.token.model.config.TokenOverflowConfig
-import cn.cotenite.agentxkotlin.domain.token.model.enums.TokenOverflowStrategyEnum
+import cn.cotenite.agentxkotlin.domain.sahred.enums.TokenOverflowStrategyEnum
 import cn.cotenite.agentxkotlin.domain.token.service.TokenOverflowStrategy
 import cn.cotenite.agentxkotlin.infrastructure.exception.BusinessException
 import org.springframework.stereotype.Service
-import kotlin.collections.ArrayList
 import kotlin.collections.MutableList
-import kotlin.collections.sort
 import kotlin.collections.sumOf
 
 

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
  * @Date  2025/6/22 02:17
  */
 @Service
-class LLMProviderService {
+object LLMProviderService {
 
     fun getNormal(protocol: ProviderProtocol, providerConfig: ProviderConfig): ChatLanguageModel? {
         return LLMProviderFactory.getLLMProvider(protocol, providerConfig)

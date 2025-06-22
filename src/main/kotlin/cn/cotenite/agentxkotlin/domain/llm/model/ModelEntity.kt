@@ -25,19 +25,19 @@ open class ModelEntity(
     @field:Id // 标记为主键
     @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
     @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性，不可为空且不可更新
-    var id: String? = null,
+    var id: String = "",
 
     @field:Column(name = "user_id") // 用户ID可以为空，表示官方模型
     var userId: String? = null,
 
     @field:Column(name = "provider_id", nullable = false) // 供应商ID通常不为空
-    var providerId: String? = null,
+    var providerId: String = "",
 
     @field:Column(name = "model_id", nullable = false) // 模型的唯一标识符
-    var modelId: String? = null,
+    var modelId: String = "",
 
     @field:Column(name = "name", nullable = false, length = 255) // 模型名称
-    var name: String? = null,
+    var name: String = "",
 
     @field:Column(name = "description", length = 512) // 描述
     var description: String? = null,
@@ -62,11 +62,11 @@ open class ModelEntity(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         other as ModelEntity
-        return id != null && id == other.id
+        return id == other.id
     }
 
     override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
+        return id.hashCode()
     }
 
     override fun toString(): String {

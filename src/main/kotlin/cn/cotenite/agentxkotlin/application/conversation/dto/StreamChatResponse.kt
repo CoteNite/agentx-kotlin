@@ -8,8 +8,8 @@ package cn.cotenite.agentxkotlin.application.conversation.dto
 data class StreamChatResponse(
     val content: String,
     val done: Boolean,
-    val sessionId: String,
-    val provider: String,
-    val model: String,
+    val sessionId: String?=null,
+    val provider: String?=null,
+    val model: String?=null,
     val timestamp : Long=System.currentTimeMillis(),
 )
