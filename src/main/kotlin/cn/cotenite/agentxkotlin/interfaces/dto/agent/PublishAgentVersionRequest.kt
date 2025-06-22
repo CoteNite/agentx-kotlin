@@ -1,60 +1,59 @@
 package cn.cotenite.agentxkotlin.interfaces.dto.agent
 
 import cn.cotenite.agentxkotlin.infrastructure.exception.ParamValidationException
+import jakarta.validation.constraints.NotBlank
 import java.util.regex.Pattern
 
-
 /**
- * @Author  RichardYoung
- * @Description
- * @Date  2025/6/16 14:00
+ * 发布Agent版本请求
  */
 data class PublishAgentVersionRequest(
-    val versionNumber: String,
-    val changeLog: String
-){
-    companion object{
-        private val VERSION_PATTERN= Pattern.compile("^\\d+\\.\\d+\\.\\d+$")
+    @field:NotBlank(message = "版本号不能为空")
+    var versionNumber: String,
+    var changeLog: String
+) {
+    companion object {
+        // 版本号正则表达式，验证x.y.z格式
+        private val VERSION_PATTERN = Pattern.compile("^\\d+\\.\\d+\\.\\d+$")
     }
 
+    /**
+     * 校验请求参数
+     */
     fun validate() {
-        if (versionNumber.trim { it <= ' ' }.isEmpty()) {
-            throw ParamValidationException("versionNumber", "版本号不能为空")
-        }
-
-        if (!VERSION_PATTERN.matcher(versionNumber).matches()) {
+        // 验证版本号格式
+        if (versionNumber?.let { !VERSION_PATTERN.matcher(it).matches() } == true) {
             throw ParamValidationException("versionNumber", "版本号必须遵循 x.y.z 格式")
         }
 
-        if (changeLog.trim { it <= ' ' }.isEmpty()) {
+        if (changeLog.isNullOrBlank()) {
             throw ParamValidationException("changeLog", "变更日志不能为空")
         }
     }
 
-
     /**
      * 比较版本号是否大于给定的版本号
-     *
+     * 
      * @param lastVersion 上一个版本号
      * @return 如果当前版本号大于lastVersion则返回true，否则返回false
      */
-    fun isVersionGreaterThan(lastVersion: String): Boolean {
-        if (lastVersion.trim { it <= ' ' }.isEmpty()) {
+    fun isVersionGreaterThan(lastVersion: String?): Boolean {
+        if (lastVersion.isNullOrBlank()) {
             return true // 如果没有上一个版本，当前版本肯定更大
         }
 
+        val currentVersion = versionNumber ?: return false
+
         // 确保两个版本号都符合格式
-        if (!VERSION_PATTERN.matcher(versionNumber).matches() ||
-            !VERSION_PATTERN.matcher(lastVersion).matches()
-        ) {
+        if (!VERSION_PATTERN.matcher(currentVersion).matches() ||
+            !VERSION_PATTERN.matcher(lastVersion).matches()) {
             throw ParamValidationException("versionNumber", "版本号必须遵循 x.y.z 格式")
         }
 
         // 分割版本号
-        val current = versionNumber.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val last = lastVersion.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val current = currentVersion.split(".")
+        val last = lastVersion.split(".")
 
-        // 比较主版本号
         val currentMajor = current[0].toInt()
         val lastMajor = last[0].toInt()
         if (currentMajor > lastMajor) return true
@@ -72,5 +71,4 @@ data class PublishAgentVersionRequest(
 
         return currentPatch > lastPatch
     }
-
 }

@@ -24,7 +24,8 @@ val httpclientVersion = "4.5.14"
 val fastjsonVersion = "2.0.48"
 val hutoolVersion = "5.8.25"
 val jacksonVersion = "2.19.0"
-
+val langchain4jVersion = "1.0.0-beta2"
+val tinylogVersion = "2.6.2"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -58,6 +59,15 @@ dependencies {
     implementation("org.eclipse:yasson:3.0.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+    implementation("dev.langchain4j:langchain4j-mcp:${langchain4jVersion}")
+    implementation("dev.langchain4j:langchain4j-open-ai:${langchain4jVersion}")
+    implementation("dev.langchain4j:langchain4j:${langchain4jVersion}")
+    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:${langchain4jVersion}")
+
+    implementation("org.tinylog:tinylog-impl:${tinylogVersion}")
+    implementation("org.tinylog:slf4j-tinylog:${tinylogVersion}")
+
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

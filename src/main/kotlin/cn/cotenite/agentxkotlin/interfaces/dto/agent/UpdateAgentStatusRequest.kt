@@ -3,18 +3,15 @@ package cn.cotenite.agentxkotlin.interfaces.dto.agent
 import cn.cotenite.agentxkotlin.infrastructure.util.ValidationUtils
 
 /**
- * @Author  RichardYoung
- * @Description
- * @Date  2025/6/16 14:08
+ * 更新Agent状态的请求对象
  */
 data class UpdateAgentStatusRequest(
-    val enabled: Boolean,
-){
+    var enabled: Boolean? = null
+) {
     /**
      * 校验请求参数
      */
     fun validate() {
         ValidationUtils.notNull(enabled, "enabled")
     }
-
 }

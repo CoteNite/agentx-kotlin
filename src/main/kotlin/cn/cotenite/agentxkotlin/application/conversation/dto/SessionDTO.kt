@@ -1,4 +1,4 @@
-package cn.cotenite.agentxkotlin.domain.conversation.dto
+package cn.cotenite.agentxkotlin.application.conversation.dto
 
 import java.time.LocalDateTime
 
@@ -12,8 +12,8 @@ data class SessionDTO(
     val agentId:String?,
     val title:String,
     val description: String?,
-    val createdAt:LocalDateTime,
-    val updatedAt:LocalDateTime,
+    val createdAt:LocalDateTime?,
+    val updatedAt:LocalDateTime?,
     val isArchived:Boolean
 ){
     companion object{

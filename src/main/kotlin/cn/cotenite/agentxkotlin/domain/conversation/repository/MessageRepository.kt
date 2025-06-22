@@ -16,18 +16,32 @@ import java.time.LocalDateTime
 @Repository
 interface MessageRepository : JpaRepository<MessageEntity, String> {
 
-    // 根据会话ID查找消息
+    /**
+     * 根据会话ID查找未删除的消息，按创建时间升序排列
+     */
     fun findBySessionIdAndDeletedAtIsNullOrderByCreatedAtAsc(sessionId: String): List<MessageEntity>
 
-    // 软删除
-    @Modifying
-    @Query("UPDATE MessageEntity m SET m.deletedAt = :deletedAt WHERE m.id = :id")
-    fun softDeleteById(@Param("id") id: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    /**
+     * 根据会话ID查找未删除的消息
+     */
+    fun findBySessionIdAndDeletedAtIsNull(sessionId: String): List<MessageEntity>
 
-    // 根据会话ID软删除所有消息
-    @Modifying
-    @Query("UPDATE MessageEntity m SET m.deletedAt = :deletedAt WHERE m.sessionId = :sessionId")
-    fun softDeleteBySessionId(@Param("sessionId") sessionId: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    /**
+     * 根据会话ID列表查找未删除的消息
+     */
+    fun findBySessionIdInAndDeletedAtIsNull(sessionIds: List<String>): List<MessageEntity>
 
-    fun deleteBySessionIdIn(sessionIds: List<String>) : Int
+    /**
+     * 软删除指定会话的所有消息
+     */
+    @Modifying
+    @Query("UPDATE MessageEntity m SET m.deletedAt = CURRENT_TIMESTAMP WHERE m.sessionId = :sessionId AND m.deletedAt IS NULL")
+    fun softDeleteBySessionId(@Param("sessionId") sessionId: String)
+
+    /**
+     * 批量软删除指定会话列表的所有消息
+     */
+    @Modifying
+    @Query("UPDATE MessageEntity m SET m.deletedAt = CURRENT_TIMESTAMP WHERE m.sessionId IN :sessionIds AND m.deletedAt IS NULL")
+    fun softDeleteBySessionIdIn(@Param("sessionIds") sessionIds: List<String>)
 }

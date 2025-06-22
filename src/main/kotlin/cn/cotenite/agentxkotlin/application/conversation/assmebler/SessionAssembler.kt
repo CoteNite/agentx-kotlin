@@ -1,7 +1,8 @@
 package cn.cotenite.agentxkotlin.application.conversation.assmebler
 
-import cn.cotenite.agentxkotlin.domain.conversation.dto.SessionDTO
+import cn.cotenite.agentxkotlin.application.conversation.dto.SessionDTO
 import cn.cotenite.agentxkotlin.domain.conversation.model.SessionEntity
+import cn.cotenite.agentxkotlin.infrastructure.exception.BusinessException
 
 /**
  * @Author  RichardYoung
@@ -11,42 +12,42 @@ import cn.cotenite.agentxkotlin.domain.conversation.model.SessionEntity
 object SessionAssembler {
 
     /**
-     * 将 Session 实体转换为 SessionDTO
-     *
-     * @param session 消息实体
-     * @return 消息DTO
+     * 將 SessionEntity 轉換為 SessionDTO
      */
     fun toDTO(session: SessionEntity): SessionDTO {
-        // 直接在构造函数中赋值，无需先创建对象再逐个设置属性
-        return SessionDTO(
-            id = session.id,
-            title = session.title,
-            agentId = session.agentId,
-            createdAt = session.createdAt,
-            updatedAt = session.updatedAt,
-            description = session.description,
-            isArchived = session.isArchived
-        )
+        return session.let {
+            SessionDTO(
+                id = it.id?:throw BusinessException("id is null"),
+                title = it.title?:throw BusinessException("title is null"),
+                agentId = it.agentId,
+                description = it.description,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt,
+                isArchived = session.isArchived,
+            )
+        }
     }
 
     /**
-     * 将 Session DTO 转换为 Session 实体
-     *
-     * @param sessionDTO 消息DTO
-     * @return 消息实体
+     * 將 SessionDTO 轉換為 SessionEntity
      */
     fun toEntity(sessionDTO: SessionDTO): SessionEntity {
-        // 同样直接在构造函数中赋值
-        return SessionEntity(
+        val sessionEntity = SessionEntity(
             id = sessionDTO.id,
             title = sessionDTO.title,
             agentId = sessionDTO.agentId,
-            createdAt = sessionDTO.createdAt,
-            updatedAt = sessionDTO.updatedAt,
             description = sessionDTO.description,
-            isArchived = sessionDTO.isArchived,
-            userId = "",
         )
+        sessionEntity.createdAt =sessionDTO.createdAt
+        sessionEntity.updatedAt =sessionDTO.updatedAt
+        sessionEntity.isArchived=sessionDTO.isArchived
+        return sessionEntity
     }
 
+    /**
+     * 將 SessionEntity 列表轉換為 SessionDTO 列表
+     */
+    fun toDTOs(sessions: List<SessionEntity>): List<SessionDTO> {
+        return sessions.map { toDTO(it) }
+    }
 }

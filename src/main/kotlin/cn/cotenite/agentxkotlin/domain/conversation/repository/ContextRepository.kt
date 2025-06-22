@@ -16,11 +16,8 @@ import java.time.LocalDateTime
 @Repository
 interface ContextRepository : JpaRepository<ContextEntity, String> {
 
-    // 根据会话ID查找上下文
-    fun findBySessionIdAndDeletedAtIsNull(sessionId: String): ContextEntity?
-
-    // 根据会话ID软删除所有上下文
-    @Modifying
-    @Query("UPDATE ContextEntity c SET c.deletedAt = :deletedAt WHERE c.sessionId = :sessionId")
-    fun softDeleteBySessionId(@Param("sessionId") sessionId: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    /**
+     * 根据会话ID查找上下文
+     */
+    fun findBySessionId(sessionId: String): ContextEntity?
 }

@@ -6,23 +6,30 @@ import cn.cotenite.agentxkotlin.infrastructure.util.ValidationUtils
 
 
 /**
- * @Author  RichardYoung
- * @Description
- * @Date  2025/6/16 14:04
+ * 审核/更新Agent版本状态的请求对象
  */
 data class ReviewAgentVersionRequest(
-    val status: PublishStatus,
-    var rejectReason: String?=null
-){
+    /**
+     * 目标状态: PUBLISHED-发布, REJECTED-拒绝, REMOVED-下架, REVIEWING-审核中
+     */
+    var status: PublishStatus? = null,
 
+    /**
+     * 拒绝原因，当status为REJECTED时必填
+     */
+    var rejectReason: String? = null
+) {
+    /**
+     * 校验请求参数
+     */
     fun validate() {
         ValidationUtils.notNull(status, "status")
 
-        if (PublishStatus.REJECTED == status && (rejectReason == null || rejectReason?.trim { it <= ' ' }?.isEmpty() != false)
-        ) {
+        // 如果是拒绝，必须提供拒绝原因
+        if (PublishStatus.REJECTED == status && rejectReason.isNullOrBlank()) {
             throw ParamValidationException("rejectReason", "拒绝时必须提供拒绝原因")
         }
 
+        // 取消状态限制，允许所有合法的PublishStatus值
     }
-
 }

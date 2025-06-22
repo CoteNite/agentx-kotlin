@@ -1,123 +1,103 @@
 package cn.cotenite.agentxkotlin.domain.conversation.model
 
-import cn.cotenite.agentxkotlin.domain.conversation.dto.SessionDTO
+import cn.cotenite.agentxkotlin.infrastructure.entity.BaseEntity
 import jakarta.persistence.*
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
-import java.time.LocalDateTime
-import java.util.*
 
 /**
  * @Author  RichardYoung
  * @Description
  * @Date  2025/6/16 17:20
  */
-@Entity
-@Table(name = "sessions")
+@Entity // 标记这是一个 JPA 实体
+@Table(name = "sessions") // 映射到数据库表名
 open class SessionEntity(
     /**
      * 会话唯一ID
      */
-    @Id
-    @Column(name = "id")
-    val id: String = UUID.randomUUID().toString(),
+    @field:Id // 标记为主键
+    @field:GeneratedValue(strategy = GenerationType.UUID) // 使用 UUID 作为 ID 生成策略
+    @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性，不可为空且不可更新
+    var id: String? = null,
 
     /**
      * 会话标题
-     * 数据库中为 NOT NULL
      */
-    @Column(name = "title", nullable = false)
-    var title: String,
+    @field:Column(name = "title", nullable = false, length = 255) // 会话标题通常不为空，设置一个合理长度
+    var title: String? = null,
 
     /**
      * 所属用户ID
-     * 数据库中为 NOT NULL
      */
-    @Column(name = "user_id", nullable = false)
-    val userId: String,
+    @field:Column(name = "user_id", nullable = false) // 用户 ID 通常不为空
+    var userId: String? = null,
 
     /**
-     * 关联的 Agent ID
-     * 数据库中为 NULLABLE
+     * 关联的 Agent 版本 ID
      */
-    @Column(name = "agent_id")
+    @field:Column(name = "agent_id")
     var agentId: String? = null,
 
     /**
      * 会话描述
-     * 数据库中为 NULLABLE
      */
-    @Column(name = "description")
+    @field:Column(name = "description", length = 512) // 描述可能较长
     var description: String? = null,
 
     /**
      * 是否归档
-     * 数据库中为 NULLABLE，默认 false
      */
-    @Column(name = "is_archived")
+    @field:Column(name = "is_archived", nullable = false) // 布尔值通常不为空，并设置默认值
     var isArchived: Boolean = false,
 
     /**
-     * 会话元数据，可存储其他自定义信息 (JSONB 类型)
-     * 数据库中为 NULLABLE
+     * 会话元数据，可存储其他自定义信息
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "metadata", columnDefinition = "jsonb")
-    var metadata: String? = null,
+    @field:Column(name = "metadata", columnDefinition = "json") // 如果是 JSON，建议使用 columnDefinition
+    var metadata: String? = null
+
+) : BaseEntity() { // 继承 BaseEntity，BaseEntity 应使用 @MappedSuperclass
+
+    // JPA 要求实体类有无参构造函数。
+    // 如果你使用了 'kotlin-noarg' Gradle 插件并正确配置，通常不需要手动编写。
+
+    // equals() 和 hashCode() 的实现对于 JPA 实体至关重要
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        other as SessionEntity
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return "SessionEntity(id=$id, title='$title', userId='$userId', isArchived=$isArchived)"
+    }
 
     /**
-     * 创建时间
-     * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
+     * 创建新会话
      */
-    @Column(name = "created_at", nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 最后更新时间
-     * 数据库为 NOT NULL，默认 CURRENT_TIMESTAMP
-     */
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 删除时间（软删除）
-     * 数据库中为 NULLABLE
-     */
-    @Column(name = "deleted_at")
-    var deletedAt: LocalDateTime? = null
-
-) {
-
-    /**
-     * 创建新会话的工厂方法
-     * Kotlin 推荐使用伴生对象 (companion object) 来存放静态工厂方法。
-     */
-    companion object {
-        fun createNew(title: String, userId: String): SessionEntity{
-            val now = LocalDateTime.now()
+    companion object { // 伴生对象，用于定义静态方法
+        @JvmStatic // 使得这个方法可以在 Java 代码中像静态方法一样直接调用
+        fun createNew(title: String, userId: String): SessionEntity {
             return SessionEntity(
                 title = title,
                 userId = userId,
-                createdAt = now,
-                updatedAt = now,
-                isArchived = false, // 明确初始状态
-                description = null, // 新建时可能没有描述
-                agentId = null,     // 新建时可能没有关联 agent
-                metadata = null     // 新建时可能没有元数据
+                isArchived = false // 默认不归档
+                // createdAt 和 updatedAt 将由 BaseEntity 的 @PrePersist 自动设置
             )
         }
     }
 
     /**
      * 更新会话信息
-     * 直接修改属性并更新 updatedAt
      */
-    fun update(newTitle: String? = null, newDescription: String? = null, newAgentId: String? = null, newMetadata: String? = null) {
-        newTitle?.let { this.title = it }
-        newDescription?.let { this.description = it }
-        newAgentId?.let { this.agentId = it }
-        newMetadata?.let { this.metadata = it }
-        this.updatedAt = LocalDateTime.now()
+    fun update(title: String?, description: String?) {
+        this.title = title
+        this.description = description
+        // `updatedAt` 将由 `BaseEntity` 的 `@PreUpdate` 自动处理
     }
 
     /**
@@ -125,25 +105,14 @@ open class SessionEntity(
      */
     fun archive() {
         this.isArchived = true
-        this.updatedAt = LocalDateTime.now()
+        // `updatedAt` 将由 `BaseEntity` 的 `@PreUpdate` 自动处理
     }
 
     /**
      * 恢复已归档会话
      */
-    fun unArchive() {
+    fun unarchive() {
         this.isArchived = false
-        this.updatedAt = LocalDateTime.now()
-    }
 
-    fun toDTO(): SessionDTO {
-        return SessionDTO(
-            id = this.id,
-            title = this.title,
-            description = this.description,
-            createdAt = this.createdAt,
-            updatedAt = this.updatedAt,
-            isArchived = this.isArchived
-        )
     }
 }

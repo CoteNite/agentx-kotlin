@@ -8,8 +8,8 @@ import cn.cotenite.agentxkotlin.infrastructure.exception.BusinessException
  * @Date  2025/6/16 11:11
  */
 enum class AgentStatus(
-    private val code:Int,
-    private val description:String
+    val code:Int,
+    val description:String
 ){
 
     /**

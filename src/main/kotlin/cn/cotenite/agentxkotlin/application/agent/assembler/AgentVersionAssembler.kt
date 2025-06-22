@@ -1,6 +1,6 @@
 package cn.cotenite.agentxkotlin.application.agent.assembler
 
-import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
+import cn.cotenite.agentxkotlin.application.agent.dto.AgentVersionDTO
 import cn.cotenite.agentxkotlin.domain.agent.model.AgentEntity
 import cn.cotenite.agentxkotlin.domain.agent.model.AgentVersionEntity
 import cn.cotenite.agentxkotlin.interfaces.dto.agent.PublishAgentVersionRequest
@@ -14,47 +14,52 @@ import cn.cotenite.agentxkotlin.interfaces.dto.agent.PublishAgentVersionRequest
 object AgentVersionAssembler {
 
     /**
-     * 将AgentVersionEntity列表转换为AgentVersionDTO列表
+     * 将 AgentVersionEntity 列表转换为 AgentVersionDTO 列表
      */
-    fun toVersionDTOList(entities: MutableList<AgentVersionEntity>): MutableList<AgentVersionDTO> {
+    fun toVersionDTOList(entities: List<AgentVersionEntity>?): List<AgentVersionDTO> {
+        // Kotlin 惯用法：如果 entities 为 null 或为空，则返回空列表
+        return entities?.mapNotNull { toDTO(it) } ?: emptyList()
+    }
 
-        val dtoList: MutableList<AgentVersionDTO> = ArrayList(entities.size)
-        for (entity in entities) {
-            dtoList.add(toDTO(entity))
+    /**
+     * 将 AgentVersionEntity 转换为 AgentVersionDTO
+     */
+    fun toDTO(entity: AgentVersionEntity?): AgentVersionDTO? {
+        return entity?.let {
+            AgentVersionDTO(
+                id = it.id,
+                name = it.name,
+                description = it.description,
+                avatar = it.avatar,
+                agentId = it.agentId,
+                versionNumber = it.versionNumber,
+                systemPrompt = it.systemPrompt,
+                welcomeMessage = it.welcomeMessage,
+                modelConfig = it.modelConfig,
+                tools = it.tools,
+                knowledgeBaseIds = it.knowledgeBaseIds,
+                changeLog = it.changeLog,
+                agentType = it.agentType,
+                publishedAt = it.publishedAt,
+                publishStatus = it.publishStatus
+            )
         }
-
-        return dtoList
     }
 
     /**
-     * 将AgentVersionEntity转换为AgentVersionDTO
-     */
-    fun toDTO(entity: AgentVersionEntity): AgentVersionDTO {
-
-        return AgentVersionDTO(
-            id = entity.id,
-            name = entity.name,
-            description = entity.description,
-            avatar = entity.avatar,
-            agentId = entity.agentId,
-            versionNumber = entity.versionNumber,
-            systemPrompt = entity.systemPrompt,
-            welcomeMessage = entity.welcomeMessage,
-            modelConfig = entity.modelConfig,
-            tools = entity.tools,
-            knowledgeBaseIds = entity.knowledgeBaseIds,
-            changeLog = entity.changeLog,
-            agentType = entity.agentType,
-            publishedAt = entity.publishedAt,
-            publishStatus = entity.publishStatus,
-        )
-    }
-
-
-    /**
-     * 创建AgentVersionEntity
+     * 创建 AgentVersionEntity
      */
     fun createVersionEntity(agent: AgentEntity, request: PublishAgentVersionRequest): AgentVersionEntity {
         return AgentVersionEntity.createFromAgent(agent, request.versionNumber, request.changeLog)
+    }
+
+    // 实际上 toVersionDTOList 和 toDTOs 功能重复，推荐保留一个。
+    // 这里保留 toDTOs 并简化，与 toVersionDTOList 功能一致。
+    /**
+     * 将 AgentVersionEntity 列表转换为 AgentVersionDTO 列表
+     */
+    fun toDTOs(agents: List<AgentVersionEntity>?): List<AgentVersionDTO> {
+        // 更简洁的写法，与 toVersionDTOList 保持一致的逻辑
+        return agents?.mapNotNull { toDTO(it) } ?: emptyList()
     }
 }

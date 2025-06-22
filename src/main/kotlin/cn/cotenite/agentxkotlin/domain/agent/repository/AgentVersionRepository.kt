@@ -16,77 +16,31 @@ import java.time.LocalDateTime
 @Repository
 interface AgentVersionRepository : JpaRepository<AgentVersionEntity, String> {
 
-    // 根据版本号查找
-    fun findByAgentIdAndVersionNumberAndDeletedAtIsNull(agentId: String, versionNumber: String): AgentVersionEntity?
 
+    // 根据AgentId和版本号查找版本
+    fun findByAgentIdAndVersionNumber(agentId: String, versionNumber: String): AgentVersionEntity?
 
-    // 根据代理ID和用户ID查找版本（按发布时间倒序）
-    fun findByAgentIdAndUserIdAndDeletedAtIsNullOrderByPublishedAtDesc(agentId: String, userId: String): List<AgentVersionEntity>
+    // 根据发布状态查找版本
+    fun findByPublishStatus(publishStatus: String): List<AgentVersionEntity>
 
-    // 根据代理ID和用户ID软删除所有版本
+    // 根据AgentId和用户ID删除版本
     @Modifying
-    @Query("UPDATE AgentVersionEntity av SET av.deletedAt = :deletedAt WHERE av.agentId = :agentId AND av.userId = :userId")
-    fun softDeleteByAgentIdAndUserId(@Param("agentId") agentId: String, @Param("userId") userId: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    @Query("DELETE FROM AgentVersionEntity v WHERE v.agentId = :agentId AND v.userId = :userId")
+    fun deleteByAgentIdAndUserId(@Param("agentId") agentId: String, @Param("userId") userId: String): Int
 
+    // 查询每个Agent的最新已发布版本，支持名称搜索
+    @Query("""SELECT v FROM AgentVersionEntity v 
+              WHERE v.publishStatus = :publishStatus 
+              AND (:name IS NULL OR v.name LIKE %:name%) 
+              AND v.publishedAt = (SELECT MAX(v2.publishedAt) FROM AgentVersionEntity v2 
+                                  WHERE v2.agentId = v.agentId AND v2.publishStatus = :publishStatus)""")
+    fun findLatestVersionsByNameAndStatus(@Param("name") name: String?, @Param("publishStatus") publishStatus: String): List<AgentVersionEntity>
 
-    // 查找代理的最新版本（按创建时间）
-    fun findLatestVersionByAgentId(agentId: String): AgentVersionEntity? {
-        return findTop1ByAgentIdAndDeletedAtIsNullOrderByCreatedAtDesc(agentId)
-    }
+    // 查询每个Agent的最新版本，按状态过滤
+    @Query("""SELECT v FROM AgentVersionEntity v 
+              WHERE (:publishStatus IS NULL OR v.publishStatus = :publishStatus) 
+              AND v.publishedAt = (SELECT MAX(v2.publishedAt) FROM AgentVersionEntity v2 
+                                  WHERE v2.agentId = v.agentId)""")
+    fun findLatestVersionsByStatus(@Param("publishStatus") publishStatus: String?): List<AgentVersionEntity>
 
-    // 查找代理和用户的最新版本（按创建时间）
-    fun findLatestVersionByAgentIdAndUserId(agentId: String, userId: String): AgentVersionEntity? {
-        return findTop1ByAgentIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(agentId, userId)
-    }
-
-    // 根据代理ID查找最新版本（按创建时间倒序）
-    fun findTop1ByAgentIdAndDeletedAtIsNullOrderByCreatedAtDesc(agentId: String): AgentVersionEntity?
-
-    // 根据代理ID和用户ID查找最新版本（按创建时间倒序）
-    fun findTop1ByAgentIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(agentId: String, userId: String): AgentVersionEntity?
-
-    /**
-     * 查询每个agentId的最新版本（按publishStatus过滤）
-     *
-     * @param publishStatus 发布状态，为null时查询所有状态
-     * @return 每个agentId的最新版本列表
-     */
-    @Query("""
-        SELECT av FROM AgentVersionEntity av 
-        WHERE av.id IN (
-            SELECT MAX(av2.id) FROM AgentVersionEntity av2 
-            WHERE av2.deletedAt IS NULL 
-            AND (:publishStatus IS NULL OR av2.publishStatus = :publishStatus)
-            GROUP BY av2.agentId
-        )
-        AND av.deletedAt IS NULL
-    """)
-    fun selectLatestVersionsByStatus(@Param("publishStatus") publishStatus: Int?): List<AgentVersionEntity>
-
-    /**
-     * 根据名称和发布状态查询所有助理的最新版本
-     * 同时支持只按状态查询（当name为空时）
-     */
-    @Query("""
-        SELECT av FROM AgentVersionEntity av 
-        WHERE av.id IN (
-            SELECT MAX(av2.id) FROM AgentVersionEntity av2 
-            WHERE av2.deletedAt IS NULL 
-            AND (:name IS NULL OR av2.name LIKE %:name%)
-            AND (:publishStatus IS NULL OR av2.publishStatus = :publishStatus)
-            GROUP BY av2.agentId
-        )
-        AND av.deletedAt IS NULL
-    """)
-    fun selectLatestVersionsByNameAndStatus(@Param("name") name: String?, @Param("publishStatus") publishStatus: Int?): List<AgentVersionEntity>
-
-    // 便捷方法：根据名称和发布状态查询最新版本
-    fun findLatestVersionsByNameAndPublishStatus(name: String?, publishStatus: Int): List<AgentVersionEntity> {
-        return selectLatestVersionsByNameAndStatus(name, publishStatus)
-    }
-
-    // 便捷方法：根据发布状态查询最新版本
-    fun findLatestVersionsByPublishStatus(publishStatus: Int): List<AgentVersionEntity> {
-        return selectLatestVersionsByStatus(publishStatus)
-    }
 }

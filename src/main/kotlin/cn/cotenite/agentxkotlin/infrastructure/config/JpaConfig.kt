@@ -15,8 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @Configuration
 @EnableJpaRepositories(
     basePackages = [
-        "cn.cotenite.agentxkotlin.domain.conversation.repository",
-        "cn.cotenite.agentxkotlin.domain.agent.repository"
+        "cn.cotenite.agentxkotlin.domain.*"
     ],
     includeFilters = [
         ComponentScan.Filter(
@@ -27,14 +26,12 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 )
 @EntityScan(
     basePackages = [
-        "cn.cotenite.agentxkotlin.domain.agent.model",
-        "cn.cotenite.agentxkotlin.domain.conversation.model"
+        "cn.cotenite.agentxkotlin.domain.*"
     ]
 )
 @ComponentScan(
     basePackages = [
-        "cn.cotenite.agentxkotlin.domain.agent.model.converter",
-        "cn.cotenite.agentxkotlin.domain.conversation.model.converter"
+        "cn.cotenite.agentxkotlin.domain.*"
     ]
 )
 @EnableTransactionManagement

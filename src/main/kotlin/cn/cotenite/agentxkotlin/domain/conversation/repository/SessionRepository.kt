@@ -16,26 +16,32 @@ import java.time.LocalDateTime
 @Repository
 interface SessionRepository : JpaRepository<SessionEntity, String> {
 
-    // 根据用户ID查找会话
-    fun findByUserIdAndDeletedAtIsNull(userId: String): List<SessionEntity>
+    /**
+     * 根据AgentID查找未删除的会话，按创建时间降序排列
+     */
+    fun findByAgentIdAndDeletedAtIsNullOrderByCreatedAtDesc(agentId: String): List<SessionEntity>
 
-    // 根据用户ID和状态查找
-    fun findByUserIdAndIsArchivedAndDeletedAtIsNull(userId: String, isArchived: Boolean): List<SessionEntity>
+    /**
+     * 根据ID和用户ID查找未删除的会话
+     */
+    fun findByIdAndUserIdAndDeletedAtIsNull(id: String, userId: String): SessionEntity?
 
-    // 软删除
+    /**
+     * 根据ID列表查找未删除的会话
+     */
+    fun findByIdInAndDeletedAtIsNull(ids: List<String>): List<SessionEntity>
+
+    /**
+     * 软删除指定ID和用户ID的会话
+     */
     @Modifying
-    @Query("UPDATE SessionEntity s SET s.deletedAt = :deletedAt WHERE s.id = :id")
-    fun softDeleteById(@Param("id") id: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    @Query("UPDATE SessionEntity s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.id = :id AND s.userId = :userId AND s.deletedAt IS NULL")
+    fun softDeleteByIdAndUserId(@Param("id") id: String, @Param("userId") userId: String)
 
-    // 批量软删除
+    /**
+     * 批量软删除指定ID列表的会话
+     */
     @Modifying
-    @Query("UPDATE SessionEntity s SET s.deletedAt = :deletedAt WHERE s.id IN :ids")
-    fun softDeleteByIds(@Param("ids") ids: List<String>, @Param("deletedAt") deletedAt: LocalDateTime): Int
-
-    // 根据用户ID和名称模糊搜索
-    fun findByUserIdAndTitleContainingIgnoreCaseAndDeletedAtIsNull(userId: String, title: String): List<SessionEntity>
-
-    fun getSessionEntitiesByAgentIdOrderByCreatedAtDesc(agentId: String):MutableList<SessionEntity>
-
-    fun deleteByIdIn(sessionIds: List<String>): Int
+    @Query("UPDATE SessionEntity s SET s.deletedAt = CURRENT_TIMESTAMP WHERE s.id IN :ids AND s.deletedAt IS NULL")
+    fun softDeleteByIdIn(@Param("ids") ids: List<String>)
 }

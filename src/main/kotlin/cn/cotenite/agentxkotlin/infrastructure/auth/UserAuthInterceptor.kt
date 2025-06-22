@@ -3,7 +3,6 @@ package cn.cotenite.agentxkotlin.infrastructure.auth
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
-import org.springframework.lang.Nullable
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 
@@ -17,7 +16,7 @@ import org.springframework.web.servlet.HandlerInterceptor
 class UserAuthInterceptor:HandlerInterceptor{
 
     companion object{
-        val logger= LoggerFactory.getLogger(UserAuthInterceptor::class.java)
+        private val logger= LoggerFactory.getLogger(UserAuthInterceptor::class.java)
     }
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
@@ -37,12 +36,9 @@ class UserAuthInterceptor:HandlerInterceptor{
     }
 
     override fun afterCompletion(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        handler: Any,
-        @Nullable ex: java.lang.Exception?
+        request: HttpServletRequest, response: HttpServletResponse, handler: Any,
+        ex: Exception?
     ) {
-        // 请求结束后清除上下文，防止内存泄漏
         UserContext.clear()
     }
 }

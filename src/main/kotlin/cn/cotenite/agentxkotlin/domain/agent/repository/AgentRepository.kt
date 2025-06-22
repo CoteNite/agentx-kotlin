@@ -15,19 +15,22 @@ import java.time.LocalDateTime
 @Repository
 interface AgentRepository : JpaRepository<AgentEntity, String> {
 
-    // 根据ID和用户ID软删除
-    @Query("UPDATE AgentEntity a SET a.deletedAt = :deletedAt WHERE a.id = :id AND a.userId = :userId")
-    fun softDeleteByIdAndUserId(@Param("id") id: String, @Param("userId") userId: String, @Param("deletedAt") deletedAt: LocalDateTime): Int
+    // 根据ID和用户ID查找Agent
+    fun findByIdAndUserId(id: String?, userId: String?): AgentEntity?
 
-    // 根据ID和用户ID查找代理
-    fun findByIdAndUserIdAndDeletedAtIsNull(id: String, userId: String): AgentEntity?
+    // 根据用户ID查找Agent列表，支持名称模糊查询
+    fun findByUserIdAndNameContainingIgnoreCaseOrderByUpdatedAtDesc(userId: String, name: String?): List<AgentEntity>
 
-    // 根据ID列表查找代理
-    fun findByIdInAndDeletedAtIsNull(ids: List<String>): List<AgentEntity>
+    // 根据用户ID查找Agent列表
+    fun findByUserIdOrderByUpdatedAtDesc(userId: String): List<AgentEntity>
 
-    // 根据用户ID查找代理（按更新时间和创建时间倒序）
-    fun findByUserIdAndDeletedAtIsNullOrderByUpdatedAtDescCreatedAtDesc(userId: String): List<AgentEntity>
+    // 根据ID列表查找Agent
+    fun findByIdIn(ids: List<String?>): List<AgentEntity>
 
-    // 根据用户ID和名称模糊搜索代理（按更新时间和创建时间倒序）
-    fun findByUserIdAndNameContainingIgnoreCaseAndDeletedAtIsNullOrderByUpdatedAtDescCreatedAtDesc(userId: String, name: String): List<AgentEntity>
+    // 根据ID列表和启用状态查找Agent
+    fun findByIdInAndEnabled(ids: List<String?>, enabled: Boolean): List<AgentEntity>
+
+    // 检查Agent是否存在
+    fun existsByIdAndUserId(id: String, userId: String): Boolean
+
 }

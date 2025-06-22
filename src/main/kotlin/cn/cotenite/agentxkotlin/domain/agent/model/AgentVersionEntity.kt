@@ -1,7 +1,10 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
 import cn.cotenite.agentxkotlin.domain.agent.constant.PublishStatus
-import cn.cotenite.agentxkotlin.domain.agent.dto.AgentVersionDTO
+import cn.cotenite.agentxkotlin.domain.agent.constant.AgentType
+import cn.cotenite.agentxkotlin.infrastructure.converter.AgentModelConfigConverter
+import cn.cotenite.agentxkotlin.infrastructure.converter.ListConverter
+import cn.cotenite.agentxkotlin.infrastructure.entity.BaseEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -12,162 +15,173 @@ import java.time.LocalDateTime
  * @Description Agent版本实体类，代表一个Agent的发布版本
  * @Date 2025/6/16 11:44
  *
- * Kotlin 的数据类自动生成 equals(), hashCode(), toString(), copy() 方法，
- * 并且为主构造函数中的属性自动生成 getter/setter (对于 var 属性) 或 getter (对于 val 属性)。
  */
 @Entity
 @Table(name = "agent_versions")
-open class AgentVersionEntity(
+open
+class AgentVersionEntity(
+
     /**
      * 版本唯一ID
      */
-    @Id
-    @Column(name = "id")
+    @field:Id // 标记为主键
+    @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
+    @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性
     var id: String? = null,
 
     /**
      * 关联的Agent ID
      */
-    @Column(name = "agent_id", nullable = false)
-    var agentId: String,
+    @field:Column(name = "agent_id", nullable = false)
+    var agentId: String? = null,
 
     /**
      * Agent名称
      */
-    @Column(name = "name", nullable = false)
-    var name: String,
+    @field:Column(name = "name")
+    var name: String? = null,
 
     /**
      * Agent头像URL
      */
-    @Column(name = "avatar")
+    @field:Column(name = "avatar")
     var avatar: String? = null,
 
     /**
      * Agent描述
      */
-    @Column(name = "description")
+    @field:Column(name = "description", length = 512)
     var description: String? = null,
 
     /**
      * 版本号，如1.0.0
      */
-    @Column(name = "version_number", nullable = false)
-    var versionNumber: String,
+    @field:Column(name = "version_number", nullable = false)
+    var versionNumber: String? = null,
 
     /**
      * Agent系统提示词
      */
-    @Column(name = "system_prompt")
+    @field:Column(name = "system_prompt", length = 2048)
     var systemPrompt: String? = null,
 
     /**
      * 欢迎消息
      */
-    @Column(name = "welcome_message")
+    @field:Column(name = "welcome_message")
     var welcomeMessage: String? = null,
 
     /**
      * 模型配置，包含模型类型、温度等参数
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "model_config", columnDefinition = "jsonb")
-    var modelConfig: ModelConfig? = ModelConfig(),
+    @field:Column(name = "model_config", columnDefinition = "json")
+    @Convert(converter = AgentModelConfigConverter::class)
+    var modelConfig: AgentModelConfig? = AgentModelConfig.createDefault(),
 
     /**
      * Agent可使用的工具列表
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "tools", columnDefinition = "jsonb")
+    @field:Column(name = "tools", columnDefinition = "json")
+    @Convert(converter = ListConverter::class)
     var tools: MutableList<AgentTool>? = mutableListOf(),
 
     /**
      * 关联的知识库ID列表
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "knowledge_base_ids", columnDefinition = "jsonb")
+    @field:Column(name = "knowledge_base_ids", columnDefinition = "json")
+    @Convert(converter = ListConverter::class)
     var knowledgeBaseIds: MutableList<String>? = mutableListOf(),
 
     /**
      * 版本更新日志
      */
-    @Column(name = "change_log")
+    @field:Column(name = "change_log", length = 2048)
     var changeLog: String? = null,
 
     /**
      * Agent类型：1-聊天助手, 2-功能性Agent
      */
-    @Column(name = "agent_type")
-    var agentType: Int? = null,
+    @field:Column(name = "agent_type", nullable = false)
+    var agentType: Int = AgentType.CHAT_ASSISTANT.code, // 提供默认值
 
     /**
      * 发布状态：1-审核中, 2-已发布, 3-拒绝, 4-已下架
      */
-    @Column(name = "publish_status")
-    var publishStatus: Int? = null,
+    @field:Column(name = "publish_status", nullable = false)
+    var publishStatus: Int = PublishStatus.REVIEWING.code, // 提供默认值
 
     /**
      * 审核拒绝原因
      */
-    @Column(name = "reject_reason")
+    @field:Column(name = "reject_reason", length = 512)
     var rejectReason: String? = null,
 
     /**
      * 审核时间
      */
-    @Column(name = "review_time")
+    @field:Column(name = "review_time")
     var reviewTime: LocalDateTime? = null,
 
     /**
      * 发布时间
      */
-    @Column(name = "published_at")
+    @field:Column(name = "published_at")
     var publishedAt: LocalDateTime? = null,
 
     /**
      * 创建者用户ID
      */
-    @Column(name = "user_id", nullable = false)
-    var userId: String,
+    @field:Column(name = "user_id", nullable = false)
+    var userId: String? = null
+
+) : BaseEntity() {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        other as AgentVersionEntity
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return "AgentVersionEntity(id=$id, agentId='$agentId', versionNumber='$versionNumber', publishStatus=$publishStatus)"
+    }
 
     /**
-     * 工具预设参数
+     * 获取发布状态枚举
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "tool_preset_params", columnDefinition = "jsonb")
-    var toolPresetParams: String? = null,
+    fun getPublishStatusEnum(): PublishStatus? {
+        return publishStatus.let { PublishStatus.fromCode(it) } // publishStatus 非空，可直接使用
+    }
 
     /**
-     * 多模态能力
+     * 更新发布状态
      */
-    @Column(name = "multi_modal")
-    var multiModal: Boolean? = null,
+    fun updatePublishStatus(status: PublishStatus) {
+        this.publishStatus = status.code
+        this.reviewTime = LocalDateTime.now()
+        // updatedAt 将由 BaseEntity 的 @PreUpdate 自动更新
+    }
 
     /**
-     * 创建时间
+     * 拒绝发布
      */
-    @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
+    fun reject(reason: String) {
+        this.publishStatus = PublishStatus.REJECTED.code
+        this.rejectReason = reason
+        this.reviewTime = LocalDateTime.now()
+        // updatedAt 将由 BaseEntity 的 @PreUpdate 自动更新
+    }
 
     /**
-     * 最后更新时间
+     * 从Agent实体创建一个新的版本实体
      */
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 删除时间（软删除）
-     */
-    @Column(name = "deleted_at")
-    var deletedAt: LocalDateTime? = null
-) {
-
-
-
     companion object {
-        /**
-         * 从Agent实体创建一个新的版本实体
-         */
+        @JvmStatic
         fun createFromAgent(agent: AgentEntity, versionNumber: String, changeLog: String): AgentVersionEntity {
             val now = LocalDateTime.now()
             return AgentVersionEntity(
@@ -181,61 +195,13 @@ open class AgentVersionEntity(
                 modelConfig = agent.modelConfig,
                 tools = agent.tools,
                 knowledgeBaseIds = agent.knowledgeBaseIds,
-                userId = agent.userId,
-                agentType = agent.type,
                 changeLog = changeLog,
-                createdAt = now,
-                updatedAt = now,
+                agentType = agent.agentType,
+                userId = agent.userId,
                 publishedAt = now,
                 publishStatus = PublishStatus.REVIEWING.code,
                 reviewTime = now
             )
         }
     }
-
-    fun toDTO(): AgentVersionDTO {
-        return AgentVersionDTO(
-            id = id,
-            agentId = agentId,
-            name = name,
-            avatar = avatar,
-            description = description,
-            versionNumber = versionNumber,
-            systemPrompt = systemPrompt,
-            welcomeMessage = welcomeMessage,
-            modelConfig = modelConfig,
-            tools = tools,
-            knowledgeBaseIds = knowledgeBaseIds,
-            changeLog = changeLog,
-            agentType = agentType,
-            publishStatus = publishStatus,
-            rejectReason = rejectReason,
-            reviewTime = reviewTime,
-            publishedAt = publishedAt,
-            userId = userId,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-            deletedAt = deletedAt
-        )
-    }
-
-
-    /**
-     * 更新发布状态
-     */
-    fun updatePublishStatus(status: PublishStatus) {
-        this.publishStatus = status.code
-        this.reviewTime = LocalDateTime.now()
-    }
-
-    /**
-     * 拒绝发布
-     */
-    fun reject(reason: String?) {
-        this.publishStatus = PublishStatus.REJECTED.code
-        this.rejectReason = reason
-        this.reviewTime = LocalDateTime.now()
-    }
-
-
 }

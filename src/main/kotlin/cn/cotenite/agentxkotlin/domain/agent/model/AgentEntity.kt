@@ -1,6 +1,9 @@
 package cn.cotenite.agentxkotlin.domain.agent.model
 
-import cn.cotenite.agentxkotlin.domain.agent.dto.AgentDTO
+import cn.cotenite.agentxkotlin.domain.agent.constant.AgentType
+import cn.cotenite.agentxkotlin.infrastructure.converter.AgentModelConfigConverter
+import cn.cotenite.agentxkotlin.infrastructure.converter.ListConverter
+import cn.cotenite.agentxkotlin.infrastructure.entity.BaseEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -15,159 +18,169 @@ import java.util.UUID
 @Entity
 @Table(name = "agents")
 open class AgentEntity(
-    /**
-     * Agent 唯一ID
-     */
-    @Id
-    @Column(name = "id")
-    var id: String = UUID.randomUUID().toString(),
 
     /**
-     * Agent 名称
+     * Agent唯一ID
      */
-    @Column(name = "name", nullable = false)
-    var name: String,
+    @field:Id // 标记为主键
+    @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
+    // 注意：@TableId(type = IdType.ASSIGN_UUID) 是MyBatis-Plus特有，JPA通常用上面的@GeneratedValue
+    @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性
+    var id: String? = null,
 
     /**
-     * Agent 头像URL
+     * Agent名称
      */
-    @Column(name = "avatar")
+    @field:Column(name = "name") // 映射到数据库列名
+    var name: String? = null,
+
+    /**
+     * Agent头像URL
+     */
+    @field:Column(name = "avatar")
     var avatar: String? = null,
 
     /**
-     * Agent 描述
+     * Agent描述
      */
-    @Column(name = "description")
+    @field:Column(name = "description", length = 512) // 可以设置列的长度
     var description: String? = null,
 
     /**
-     * Agent 系统提示词
+     * Agent系统提示词
      */
-    @Column(name = "system_prompt")
+    @field:Column(name = "system_prompt", length = 2048) // 文本字段通常建议设置长度
     var systemPrompt: String? = null,
 
     /**
      * 欢迎消息
      */
-    @Column(name = "welcome_message")
+    @field:Column(name = "welcome_message")
     var welcomeMessage: String? = null,
 
     /**
      * 模型配置，包含模型类型、温度等参数
+     * 使用 @Convert 和 AttributeConverter 处理复杂对象到JSON字符串的映射
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "model_config", columnDefinition = "jsonb")
-    var modelConfig: ModelConfig? = null,
+    @field:Column(name = "model_config", columnDefinition = "json") // 定义数据库列类型为JSON
+    @Convert(converter = AgentModelConfigConverter::class) // 指定JPA转换器
+    var modelConfig: AgentModelConfig? = AgentModelConfig.createDefault(),
 
     /**
-     * Agent 可使用的工具列表
+     * Agent可使用的工具列表
+     * 同样使用 @Convert 处理列表到JSON字符串的映射
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "tools", columnDefinition = "jsonb")
-    var tools: MutableList<AgentTool>? = null,
+    @field:Column(name = "tools", columnDefinition = "json")
+    @Convert(converter = ListConverter::class)
+    var tools: MutableList<AgentTool>? = mutableListOf(),
 
     /**
      * 关联的知识库ID列表
+     * 同样使用 @Convert 处理列表到JSON字符串的映射
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "knowledge_base_ids", columnDefinition = "jsonb")
-    var knowledgeBaseIds: MutableList<String>? = null,
+    @field:Column(name = "knowledge_base_ids", columnDefinition = "json")
+    @Convert(converter = ListConverter::class)
+    var knowledgeBaseIds: MutableList<String>? = mutableListOf(),
 
     /**
-     * 已发布的版本号ID
+     * 当前发布的版本ID
      */
-    @Column(name = "published_version")
+    @field:Column(name = "published_version")
     var publishedVersion: String? = null,
 
     /**
-     * 是否启用
+     * Agent状态：1-启用，0-禁用
      */
-    @Column(name = "enabled")
-    var enabled: Boolean = true,
+    @field:Column(name = "enabled", nullable = false)
+    var enabled: Boolean = true, // Boolean通常不为空，默认启用
 
     /**
      * Agent类型：1-聊天助手, 2-功能性Agent
      */
-    @Column(name = "agent_type")
-    var type: Int = 1,
+    @field:Column(name = "agent_type", nullable = false)
+    var agentType: Int = AgentType.CHAT_ASSISTANT.code, // Int通常不为空，提供默认值
 
     /**
      * 创建者用户ID
      */
-    @Column(name = "user_id", nullable = false)
-    val userId: String,
+    @field:Column(name = "user_id")
+    var userId: String? = null,
 
-    /**
-     * 工具预设参数
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "tool_preset_params", columnDefinition = "jsonb")
-    var toolPresetParams: String? = null,
+) : BaseEntity() {
 
-    /**
-     * 多模态能力
-     */
-    @Column(name = "multi_modal")
-    var multiModal: Boolean = false,
-
-    /**
-     * 标签列表
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "tags", columnDefinition = "jsonb")
-    var tags: MutableList<String>? = null,
-
-    /**
-     * 是否公开
-     */
-    @Column(name = "is_public")
-    var isPublic: Boolean = false,
-
-    /**
-     * 创建时间
-     */
-    @Column(name = "created_at", nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 最后更新时间
-     */
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 删除时间（软删除）
-     */
-    @Column(name = "deleted_at")
-    var deletedAt: LocalDateTime? = null
-) {
-    fun toDTO(): AgentDTO {
-        return AgentDTO(
-            id = this.id,
-            name = this.name,
-            avatar = this.avatar,
-            description = this.description,
-            systemPrompt = this.systemPrompt,
-            welcomeMessage = this.welcomeMessage,
-            modelConfig = this.modelConfig,
-            tools = this.tools,
-            knowledgeBaseIds = this.knowledgeBaseIds,
-            publishedVersion = this.publishedVersion,
-            enabled = this.enabled,
-            agentType = this.type,
-            userId = this.userId,
-            createdAt = this.createdAt,
-            updatedAt = this.updatedAt
-        )
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        other as AgentEntity
+        return id != null && id == other.id // 只有当id不为空时才依赖id进行比较
     }
 
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0 // 如果id为空，返回0或System.identityHashCode(this)
+    }
+
+    override fun toString(): String {
+        return "AgentEntity(id=$id, name='$name', agentType=$agentType, enabled=$enabled)"
+        // 避免在toString中包含懒加载的关联属性，以防LazyInitializationException
+    }
+
+    /**
+     * 创建新的Agent对象
+     */
+    companion object {
+        fun createNew(
+            name: String,
+            description: String,
+            avatar: String,
+            agentType: Int?,
+            userId: String
+        ): AgentEntity {
+            return AgentEntity(
+                name = name,
+                description = description,
+                avatar = avatar,
+                agentType = agentType ?: AgentType.CHAT_ASSISTANT.code, // 使用Elvis运算符处理null
+                userId = userId,
+                enabled = true // 默认启用
+                // createdAt 和 updatedAt 通常由 BaseEntity 的 @PrePersist 自动设置
+            )
+        }
+    }
+
+    /**
+     * 更新Agent基本信息
+     */
+    fun updateBasicInfo(name: String, avatar: String, description: String) {
+        this.name = name
+        this.avatar = avatar
+        this.description = description
+        // updatedAt 将由 @PreUpdate 自动更新
+    }
+
+    /**
+     * 更新Agent配置
+     */
+    fun updateConfig(
+        systemPrompt: String?,
+        welcomeMessage: String?,
+        modelConfig: AgentModelConfig?,
+        tools: MutableList<AgentTool>?,
+        knowledgeBaseIds: MutableList<String>?
+    ) {
+        this.systemPrompt = systemPrompt
+        this.welcomeMessage = welcomeMessage
+        this.modelConfig = modelConfig
+        this.tools = tools
+        this.knowledgeBaseIds = knowledgeBaseIds
+        // updatedAt 将由 @PreUpdate 自动更新
+    }
 
     /**
      * 启用Agent
      */
     fun enable() {
         this.enabled = true
-        this.updatedAt = LocalDateTime.now()
+        // updatedAt 将由 @PreUpdate 自动更新
     }
 
     /**
@@ -175,7 +188,7 @@ open class AgentEntity(
      */
     fun disable() {
         this.enabled = false
-        this.updatedAt = LocalDateTime.now()
+        // updatedAt 将由 @PreUpdate 自动更新
     }
 
     /**
@@ -183,13 +196,21 @@ open class AgentEntity(
      */
     fun publishVersion(versionId: String) {
         this.publishedVersion = versionId
-        this.updatedAt = LocalDateTime.now()
+        // updatedAt 将由 @PreUpdate 自动更新
     }
 
     /**
      * 软删除
      */
     fun delete() {
-        this.deletedAt = LocalDateTime.now()
+        this.deletedAt = LocalDateTime.now() // 手动设置deletedAt
+        // updatedAt 将由 @PreUpdate 自动更新
+    }
+
+    /**
+     * 获取Agent类型枚举
+     */
+    fun getAgentTypeEnum(): AgentType? {
+        return agentType.let { AgentType.fromCode(it) }
     }
 }

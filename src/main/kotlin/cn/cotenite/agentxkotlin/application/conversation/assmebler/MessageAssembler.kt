@@ -1,6 +1,6 @@
 package cn.cotenite.agentxkotlin.application.conversation.assmebler
 
-import cn.cotenite.agentxkotlin.domain.conversation.dto.MessageDTO
+import cn.cotenite.agentxkotlin.application.conversation.dto.MessageDTO
 import cn.cotenite.agentxkotlin.domain.conversation.model.MessageEntity
 
 /**
@@ -11,12 +11,12 @@ import cn.cotenite.agentxkotlin.domain.conversation.model.MessageEntity
 object MessageAssembler { // 使用 'object' 关键字创建单例对象，替代 Java 的静态类
 
     /**
-     * 将Message实体转换为MessageDTO
+     * 將 Message 實體轉換為 MessageDTO
      *
-     * @param message 消息实体
+     * @param message 消息實體
      * @return 消息DTO
      */
-    fun toDTO(message: MessageEntity): MessageDTO? {
+    fun toDTO(message: MessageEntity): MessageDTO {
         return message.let {
             MessageDTO(
                 id = it.id,
@@ -28,12 +28,12 @@ object MessageAssembler { // 使用 'object' 关键字创建单例对象，替�
     }
 
     /**
-     * 将消息实体列表转换为DTO列表
+     * 將消息實體列表轉換為DTO列表
      *
-     * @param messages 消息实体列表
+     * @param messages 消息實體列表
      * @return 消息DTO列表
      */
-    fun toDTOList(messages: List<MessageEntity>): List<MessageDTO> {
-        return messages.mapNotNull { toDTO(it) }
+    fun toDTOs(messages: List<MessageEntity>): List<MessageDTO> {
+        return messages.map { toDTO(it) }
     }
 }

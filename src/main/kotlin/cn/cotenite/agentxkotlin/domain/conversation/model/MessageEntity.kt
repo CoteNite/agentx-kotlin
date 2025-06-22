@@ -1,183 +1,84 @@
 package cn.cotenite.agentxkotlin.domain.conversation.model
 
-import cn.cotenite.agentxkotlin.domain.conversation.dto.MessageDTO
+import cn.cotenite.agentxkotlin.domain.conversation.constant.Role
+import cn.cotenite.agentxkotlin.infrastructure.converter.RoleConverter
+import cn.cotenite.agentxkotlin.infrastructure.entity.BaseEntity
 import jakarta.persistence.*
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
-import java.time.LocalDateTime
-import java.util.*
 
 /**
  * @Author  RichardYoung
  * @Description
  * @Date  2025/6/16 17:25
  */
-@Entity
-@Table(name = "messages")
+@Entity // 标记这是一个JPA实体
+@Table(name = "messages") // 映射到数据库表名
 open class MessageEntity(
     /**
      * 消息唯一ID
-     * 数据库: NOT NULL
      */
-    @Id
-    @Column(name = "id")
-    val id: String = UUID.randomUUID().toString(),
+    @field:Id // 标记为主键
+    @field:GeneratedValue(strategy = GenerationType.UUID) // 使用UUID作为ID生成策略
+    @field:Column(name = "id", nullable = false, updatable = false) // 明确列名和属性
+    var id: String? = null,
 
     /**
      * 所属会话ID
-     * 数据库: NOT NULL
      */
-    @Column(name = "session_id", nullable = false)
-    val sessionId: String,
+    @field:Column(name = "session_id", nullable = false)
+    var sessionId: String? = null,
 
     /**
      * 消息角色 (user, assistant, system)
-     * 数据库: NOT NULL
+     * 使用 @Convert 和 RoleConverter 处理枚举到Integer的映射
      */
-    @Column(name = "role", nullable = false)
-    val role: String,
+    @field:Column(name = "role", nullable = false)
+    @Convert(converter = RoleConverter::class)
+    var role: Role? = null, // Role 类型通常不可为 null，但为了初始化可以暂时设为可空
 
     /**
      * 消息内容
-     * 数据库: NOT NULL
      */
-    @Column(name = "content", nullable = false)
-    val content: String,
-
-    /**
-     * 消息类型 (例如: 'TEXT', 'IMAGE', 'TOOL_CALL')
-     * 数据库: NOT NULL, 默认值 'TEXT'
-     */
-    @Column(name = "message_type", nullable = false)
-    val messageType: String = "TEXT",
+    @field:Column(name = "content", columnDefinition = "TEXT") // 内容可能很长，使用 TEXT 类型
+    var content: String? = null,
 
     /**
      * Token数量
-     * 数据库: NOT NULL, 默认值 0
      */
-    @Column(name = "token_count", nullable = false)
-    val tokenCount: Int = 0,
+    @field:Column(name = "token_count", nullable = false)
+    var tokenCount: Int = 0, // 提供默认值，通常不为空
 
     /**
      * 服务提供商
-     * 数据库: NOT NULL
      */
-    @Column(name = "provider", nullable = false)
-    val provider: String,
+    @field:Column(name = "provider")
+    var provider: String? = null,
 
     /**
      * 使用的模型
-     * 数据库: NOT NULL
      */
-    @Column(name = "model", nullable = false)
-    val model: String,
+    @field:Column(name = "model")
+    var model: String? = null,
 
     /**
-     * 消息元数据 (JSONB 类型)
-     * 数据库: NULLABLE
+     * 消息元数据 (假设存储为JSON字符串)
      */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "metadata", columnDefinition = "jsonb")
-    val metadata: String? = null,
+    @field:Column(name = "metadata", columnDefinition = "json") // 假设存储为JSON
+    var metadata: String? = null // 如果是复杂对象，可以考虑再写一个Converter
 
-    /**
-     * 消息中包含的文件URL列表 (JSONB 类型)
-     * 数据库: NULLABLE
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "file_urls", columnDefinition = "jsonb")
-    val fileUrls: String? = null,
+) : BaseEntity() { // 继承BaseEntity
 
-    /**
-     * 创建时间
-     * 数据库: NOT NULL, 默认 CURRENT_TIMESTAMP
-     */
-    @Column(name = "created_at", nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 更新时间
-     * 数据库: NOT NULL, 默认 CURRENT_TIMESTAMP
-     */
-    @Column(name = "updated_at", nullable = false)
-    val updatedAt: LocalDateTime = LocalDateTime.now(),
-
-    /**
-     * 删除时间（软删除）
-     * 数据库: NULLABLE
-     */
-    @Column(name = "deleted_at")
-    val deletedAt: LocalDateTime? = null
-) {
-
-
-    /**
-     * 伴生对象，用于存放静态工厂方法
-     */
-    companion object {
-        /**
-         * 创建用户消息
-         */
-        fun createUserMessage(sessionId: String, content: String): MessageEntity {
-            val now = LocalDateTime.now()
-            return MessageEntity(
-                sessionId = sessionId,
-                role = "user",
-                content = content,
-                createdAt = now,
-                provider = "",
-                model = ""
-            )
-        }
-
-        /**
-         * 创建系统消息
-         */
-        fun createSystemMessage(sessionId: String, content: String): MessageEntity {
-            val now = LocalDateTime.now()
-            return MessageEntity(
-                sessionId = sessionId,
-                role = "system",
-                content = content,
-                createdAt = now,
-                provider = "",
-                model = ""
-            )
-        }
-
-        /**
-         * 创建助手消息
-         */
-        fun createAssistantMessage(
-            sessionId: String,
-            content: String,
-            provider: String,
-            model: String,
-            tokenCount: Int? = null // 可空以便不传入时使用默认值0
-        ): MessageEntity{
-            val now = LocalDateTime.now()
-            return MessageEntity(
-                sessionId = sessionId,
-                role = "assistant",
-                content = content,
-                createdAt = now,
-                provider = provider,
-                model = model,
-                tokenCount = tokenCount ?: 0
-            )
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        other as MessageEntity
+        return id != null && id == other.id
     }
 
-
-    fun toDTO(): MessageDTO {
-        return MessageDTO(
-            id = this.id,
-            role = this.role,
-            content = this.content,
-            createdAt = this.createdAt,
-            provider = this.provider,
-            model = this.model,
-        )
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
     }
 
+    override fun toString(): String {
+        return "MessageEntity(id=$id, sessionId='$sessionId', role=$role, tokenCount=$tokenCount)"
+    }
 }
