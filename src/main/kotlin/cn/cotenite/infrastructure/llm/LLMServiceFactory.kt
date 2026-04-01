@@ -1,24 +1,18 @@
 package cn.cotenite.infrastructure.llm
 
-import dev.langchain4j.kotlin.model.chat.StreamingChatModelReply
-import dev.langchain4j.model.chat.StreamingChatModel
-import kotlinx.coroutines.flow.Flow
-import org.springframework.stereotype.Component
-import cn.cotenite.domain.conversation.handler.ChatEnvironment
-import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.llm.model.ModelEntity
 import cn.cotenite.domain.llm.model.ProviderEntity
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.llm.config.ProviderConfig
-import cn.cotenite.infrastructure.llm.service.StreamResponseHandler
+import dev.langchain4j.model.chat.ChatModel
+import dev.langchain4j.model.chat.StreamingChatModel
+import org.springframework.stereotype.Component
 
 /**
  * LLM 服务工厂 - 支持 coroutines 和 Flow
  */
 @Component
-class LLMServiceFactory(
-    private val streamResponseHandler: StreamResponseHandler
-) {
+class LLMServiceFactory{
 
     fun getStreamingClient(provider: ProviderEntity, model: ModelEntity): StreamingChatModel {
         val protocol = provider.protocol ?: throw BusinessException("服务商协议不存在")
@@ -31,16 +25,27 @@ class LLMServiceFactory(
         return LLMProviderService.getStream(protocol, config)
     }
 
+
     /**
-     * 获取流式响应 Flow
+     * 获取标准LLM客户端
+     *
+     * @param provider 服务商实体
+     * @param model 模型实体
+     * @return 流式聊天语言模型
      */
-    fun getStreamingFlow(
-        environment: ChatEnvironment,
-        userMessageEntity: MessageEntity,
-        llmMessageEntity: MessageEntity
-    ): Flow<StreamingChatModelReply> {
-        val llmClient = getStreamingClient(environment.provider, environment.model)
-        val llmRequest = environment.toLLMRequest()
-        return streamResponseHandler.handleStreamResponse(llmClient, llmRequest)
+    fun getStrandClient(provider: ProviderEntity, model: ModelEntity): ChatModel {
+        val config = provider.config
+        val protocol=provider.protocol?:throw BusinessException("服务商协议不存在")
+
+        val providerConfig = ProviderConfig(
+            config?.apiKey,
+            config?.baseUrl,
+            model.modelId,
+            protocol
+        )
+
+        return LLMProviderService.getNormal(protocol, providerConfig)
     }
+
+
 }

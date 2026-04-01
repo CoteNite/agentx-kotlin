@@ -34,9 +34,12 @@ dependencies {
 
 
     // LangChain4j with Kotlin support
-    implementation("dev.langchain4j:langchain4j:1.0.0-rc1")
-    implementation("dev.langchain4j:langchain4j-kotlin:1.0.0-beta4")
-    implementation("dev.langchain4j:langchain4j-open-ai:1.0.0-rc1")
+    implementation("dev.langchain4j:langchain4j:1.12.2")
+    implementation("dev.langchain4j:langchain4j-kotlin:1.12.2-beta22")
+    implementation("dev.langchain4j:langchain4j-anthropic:1.12.2")
+    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.12.2-beta22")
+    implementation("dev.langchain4j:langchain4j-mcp:1.12.2-beta22")
+    implementation("dev.langchain4j:langchain4j-open-ai:1.12.2")
     
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")

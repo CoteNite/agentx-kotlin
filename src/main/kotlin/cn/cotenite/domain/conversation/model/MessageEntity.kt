@@ -1,13 +1,14 @@
 package cn.cotenite.domain.conversation.model
 
-import com.baomidou.mybatisplus.annotation.FieldFill
+import cn.cotenite.domain.conversation.constant.MessageType
+import cn.cotenite.domain.conversation.constant.Role
+import cn.cotenite.infrastructure.converter.MessageTypeConverter
+import cn.cotenite.infrastructure.converter.RoleConverter
+import cn.cotenite.infrastructure.entity.BaseEntity
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import cn.cotenite.domain.conversation.constant.Role
-import cn.cotenite.infrastructure.converter.RoleConverter
-import cn.cotenite.infrastructure.entity.BaseEntity
 import java.time.LocalDateTime
 
 /**
@@ -32,6 +33,12 @@ class MessageEntity : BaseEntity() {
     var model: String? = null
     @TableField("metadata")
     var metadata: String? = null
+    /**
+     * 消息类型
+     */
+    @TableField(value = "message_type", typeHandler = MessageTypeConverter::class)
+    var messageType: MessageType= MessageType.TEXT
+
 
     companion object {
         fun create(sessionId: String, role: Role, content: String): MessageEntity {
@@ -42,5 +49,17 @@ class MessageEntity : BaseEntity() {
             message.createdAt = LocalDateTime.now()
             return message
         }
+    }
+
+    fun isUserMessage(): Boolean {
+        return this.role === Role.USER
+    }
+
+    fun isAIMessage(): Boolean {
+        return this.role === Role.ASSISTANT
+    }
+
+    fun isSystemMessage(): Boolean {
+        return this.role === Role.SYSTEM
     }
 }

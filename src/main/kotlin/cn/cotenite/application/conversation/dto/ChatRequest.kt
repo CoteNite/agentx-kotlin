@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank
  */
 data class ChatRequest(
     @field:NotBlank(message = "消息内容不可为空")
-    var message: String? = null,
+    var message: String,
     @field:NotBlank(message = "会话id不可为空")
-    var sessionId: String? = null
+    var sessionId: String
 )

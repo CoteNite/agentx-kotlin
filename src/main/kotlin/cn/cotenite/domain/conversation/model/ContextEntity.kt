@@ -18,7 +18,7 @@ class ContextEntity : BaseEntity() {
     var sessionId: String? = null
 
     @TableField(value = "active_messages", typeHandler = ListConverter::class)
-    var activeMessages: MutableList<String> = mutableListOf()
+    var activeMessages: MutableList<String?> = mutableListOf()
     @TableField("summary")
     var summary: String? = null
 }

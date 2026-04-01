@@ -1,10 +1,12 @@
 package cn.cotenite.domain.agent.model
 
 import cn.cotenite.domain.shared.enums.TokenOverflowStrategyEnum
+import com.fasterxml.jackson.annotation.JsonInclude
 
 /**
  * LLM模型配置
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class LLMModelConfig(
     /**
      * 模型ID
@@ -13,15 +15,15 @@ data class LLMModelConfig(
     /**
      * 温度
      */
-    var temperature: Double? = null,
+    var temperature: Double = 0.7,
     /**
      * topP
      */
-    var topP: Double? = null,
+    var topP: Double = 0.7,
     /**
      * topK
      */
-    var topK: Int? = null,
+    var topK: Int = 50,
     /**
      * 最大token
      */

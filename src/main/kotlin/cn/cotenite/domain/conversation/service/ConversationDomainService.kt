@@ -14,7 +14,7 @@ class ConversationDomainService(
     private val messageRepository: MessageRepository
 ) {
 
-    fun getConversationMessages(sessionId: String): List<MessageEntity> =
+    fun getConversationMessages(sessionId: String?): List<MessageEntity> =
         messageRepository.selectList(
             KtQueryWrapper(MessageEntity::class.java)
                 .eq(MessageEntity::sessionId, sessionId)

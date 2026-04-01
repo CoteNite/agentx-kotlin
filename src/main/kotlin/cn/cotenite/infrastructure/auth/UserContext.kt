@@ -22,6 +22,5 @@ object UserContext {
     /**
      * 清除当前用户信息
      */
-    fun clear() =
-        currentUserId.remove()
+    fun clear() = currentUserId.remove()
 }

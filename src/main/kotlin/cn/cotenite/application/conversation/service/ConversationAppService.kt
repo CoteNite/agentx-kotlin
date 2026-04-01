@@ -1,20 +1,22 @@
 package cn.cotenite.application.conversation.service
 
-import org.springframework.stereotype.Service
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import cn.cotenite.application.conversation.assembler.MessageAssembler
 import cn.cotenite.application.conversation.dto.ChatRequest
 import cn.cotenite.application.conversation.dto.MessageDTO
+import cn.cotenite.application.conversation.service.handler.MessageHandlerFactory
+import cn.cotenite.application.conversation.service.handler.context.ChatContext
+import cn.cotenite.domain.agent.model.AgentEntity
+import cn.cotenite.domain.agent.model.LLMModelConfig
 import cn.cotenite.domain.agent.service.AgentDomainService
 import cn.cotenite.domain.agent.service.AgentWorkspaceDomainService
-import cn.cotenite.domain.conversation.handler.ChatEnvironment
-import cn.cotenite.domain.conversation.handler.MessageHandlerFactory
 import cn.cotenite.domain.conversation.model.ContextEntity
 import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.conversation.service.ContextDomainService
 import cn.cotenite.domain.conversation.service.ConversationDomainService
 import cn.cotenite.domain.conversation.service.MessageDomainService
 import cn.cotenite.domain.conversation.service.SessionDomainService
+import cn.cotenite.domain.llm.model.ModelEntity
+import cn.cotenite.domain.llm.model.ProviderEntity
 import cn.cotenite.domain.llm.service.LlmDomainService
 import cn.cotenite.domain.shared.enums.TokenOverflowStrategyEnum
 import cn.cotenite.domain.token.model.TokenMessage
@@ -23,10 +25,14 @@ import cn.cotenite.domain.token.service.TokenDomainService
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.llm.config.ProviderConfig
 import cn.cotenite.infrastructure.transport.MessageTransportFactory
-import java.time.LocalDateTime
+import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 /**
  * 对话应用服务
+ */
+/**
+ * 对话应用服务，使用 Kotlin 函数式风格重写
  */
 @Service
 class ConversationAppService(
@@ -43,52 +49,71 @@ class ConversationAppService(
 ) {
 
     fun getConversationMessages(sessionId: String, userId: String): List<MessageDTO> {
-        sessionDomainService.find(sessionId, userId) ?: throw BusinessException("会话不存在")
-        return conversationDomainService.getConversationMessages(sessionId).let(MessageAssembler::toDTOs)
+        val sessionEntity = sessionDomainService.find(sessionId, userId)
+            ?: throw BusinessException("会话不存在")
+
+        return conversationDomainService.getConversationMessages(sessionEntity.id)
+            .let { MessageAssembler.toDTOs(it) }
     }
 
     fun chat(chatRequest: ChatRequest, userId: String): SseEmitter {
+        // 1. 准备环境
         val environment = prepareEnvironment(chatRequest, userId)
-        val transport = transportFactory.getSseTransport()
+
+        // 2. 获取传输与处理器并执行 (链式调用)
+        val transport = transportFactory.getTransport<SseEmitter>(MessageTransportFactory.TRANSPORT_TYPE_SSE)
         val handler = messageHandlerFactory.getHandler(environment.agent)
-        return handler.handleChat(environment, transport)
+
+        return handler.chat(environment, transport)
     }
 
-    private fun prepareEnvironment(chatRequest: ChatRequest, userId: String): ChatEnvironment {
-        val sessionId = chatRequest.sessionId ?: throw BusinessException("会话id不可为空")
-        val userMessage = chatRequest.message ?: throw BusinessException("消息内容不可为空")
-
+    private fun prepareEnvironment(chatRequest: ChatRequest, userId: String): ChatContext {
+        val sessionId = chatRequest.sessionId
         val session = sessionDomainService.getSession(sessionId, userId)
-        val agentId = session.agentId ?: throw BusinessException("会话未绑定助理")
+        val agentId = session.agentId?:throw BusinessException("Agent不存在")
 
-        val agent = agentDomainService.getAgentById(agentId)
-        if (agent.userId != userId && !agent.enabled) throw BusinessException("agent已被禁用")
+        val agent = agentDomainService.getAgentById(agentId).apply {
+            if (this.userId != userId && !this.enabled) throw BusinessException("agent已被禁用")
+        }
 
         val workspace = agentWorkspaceDomainService.getWorkspace(agentId, userId)
         val llmModelConfig = workspace.llmModelConfig
-        val modelId = llmModelConfig.modelId ?: throw BusinessException("未配置模型")
+        val model = llmDomainService.getModelById(llmModelConfig.modelId?:throw BusinessException("模型不存在")).apply { isActive() }
+        val provider = llmDomainService.getProvider(model.providerId?:throw BusinessException("模型提供商不存在"), userId).apply { isActive() }
 
-        val model = llmDomainService.getModelById(modelId).also { it.isActive() }
-        val provider = llmDomainService.getProvider(model.providerId.orEmpty(), userId).also { it.isActive() }
+        return prepareChatContext(
+            sessionId = sessionId,
+            userId = userId,
+            userMessage = chatRequest.message,
+            agent = agent,
+            model = model,
+            provider = provider,
+            llmModelConfig = llmModelConfig
+        )
+    }
 
-        val contextEntity = contextDomainService.findBySessionId(sessionId) ?: ContextEntity().apply {
-            this.sessionId = sessionId
+    private fun prepareChatContext(
+        sessionId: String,
+        userId: String,
+        userMessage: String,
+        agent: AgentEntity,
+        model: ModelEntity,
+        provider: ProviderEntity,
+        llmModelConfig: LLMModelConfig,): ChatContext
+    {
+
+
+        val contextEntity = contextDomainService.findBySessionId(sessionId) ?: ContextEntity().apply { this.sessionId = sessionId }
+
+        val messageEntities = contextEntity.activeMessages.let { ids ->
+            if (ids.isNotEmpty()) {
+                messageDomainService.listByIds(ids).also {
+                    applyTokenOverflowStrategy(llmModelConfig, provider, model.modelId!!, contextEntity, it)
+                }
+            } else emptyList()
         }
 
-        val messageEntities = messageDomainService.listByIds(contextEntity.activeMessages)
-
-        applyTokenOverflowStrategy(
-            strategyType = llmModelConfig.strategyType,
-            maxTokens = llmModelConfig.maxTokens,
-            summaryThreshold = llmModelConfig.summaryThreshold,
-            providerConfig = provider.protocol?.let { protocol ->
-                ProviderConfig(provider.config?.apiKey, provider.config?.baseUrl, model.modelId, protocol)
-            },
-            contextEntity = contextEntity,
-            messageEntities = messageEntities
-        )
-
-        return ChatEnvironment(
+        return ChatContext(
             sessionId = sessionId,
             userId = userId,
             userMessage = userMessage,
@@ -99,44 +124,50 @@ class ConversationAppService(
             contextEntity = contextEntity,
             messageHistory = messageEntities
         )
+
     }
 
     private fun applyTokenOverflowStrategy(
-        strategyType: TokenOverflowStrategyEnum,
-        maxTokens: Int?,
-        summaryThreshold: Int?,
-        providerConfig: ProviderConfig?,
+        llmModelConfig: LLMModelConfig,
+        provider: ProviderEntity,
+        modelId: String,
         contextEntity: ContextEntity,
         messageEntities: List<MessageEntity>
     ) {
-        val config = TokenOverflowConfig().apply {
+
+        val strategyType = llmModelConfig.strategyType
+
+        val tokenOverflowConfig = TokenOverflowConfig().apply {
             this.strategyType = strategyType
-            this.maxTokens = maxTokens
-            this.summaryThreshold = summaryThreshold
-            this.providerConfig = providerConfig
+            this.maxTokens = llmModelConfig.maxTokens
+            this.summaryThreshold = llmModelConfig.summaryThreshold
+            this.providerConfig = ProviderConfig(
+                provider.config?.apiKey,
+                provider.config?.baseUrl,
+                modelId,
+                provider.protocol?:throw BusinessException("协议不存在")
+            )
         }
 
-        tokenDomainService.processMessages(tokenizeMessages(messageEntities), config)
+        tokenDomainService.processMessages(tokenizeMessage(messageEntities), tokenOverflowConfig)
             .takeIf { it.processed }
-            ?.also { result ->
-                contextEntity.activeMessages = result.retainedMessages.mapNotNull(TokenMessage::id).toMutableList()
+            ?.let { result ->
+                contextEntity.activeMessages = result.retainedMessages.map { it.id }.toMutableList()
 
-                if (strategyType == TokenOverflowStrategyEnum.SUMMARIZE && !result.summary.isNullOrBlank()) {
-                    contextEntity.summary = contextEntity.summary.orEmpty() + result.summary
+                if (strategyType == TokenOverflowStrategyEnum.SUMMARIZE) {
+                    contextEntity.summary = (contextEntity.summary ?: "") + result.summary
                 }
-
-                contextDomainService.insertOrUpdate(contextEntity)
             }
     }
 
-    private fun tokenizeMessages(messageEntities: List<MessageEntity>): List<TokenMessage> =
-        messageEntities.map {
-            TokenMessage(
-                id = it.id,
-                role = it.role?.name,
-                content = it.content,
-                tokenCount = it.tokenCount,
-                createdAt = it.createdAt ?: LocalDateTime.now()
-            )
+    private fun tokenizeMessage(messageEntities: List<MessageEntity>): List<TokenMessage> =
+        messageEntities.map { message ->
+            TokenMessage().apply {
+                id = message.id
+                role = message.role?.name
+                content = message.content
+                tokenCount = message.tokenCount
+                createdAt = message.createdAt!!
+            }
         }
 }
