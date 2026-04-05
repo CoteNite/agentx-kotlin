@@ -16,6 +16,17 @@ class WebMvcConfig(
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(userAuthInterceptor)
             .addPathPatterns("/**")
-            .excludePathPatterns("/api/auth/login", "/api/auth/register")
+            .excludePathPatterns(
+                "/login",
+                "/register",
+                "/send-email-code",
+                "/verify-email-code",
+                "/verify-reset-password-code",
+                "/get-captcha",
+                "/reset-password",
+                "/send-reset-password-code",
+                "/oauth/github/authorize",
+                "/oauth/github/callback"
+            )
     }
 }

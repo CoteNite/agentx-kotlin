@@ -37,14 +37,8 @@ class PortalLLMController(
         Result.success(llmAppService.getProviderDetail(providerId, currentUserId()))
 
     @GetMapping("/providers")
-    fun getProviders(@RequestParam(required = false, defaultValue = "all") type: String): Result<List<ProviderDTO>> {
-        val providerType = when (type.lowercase()) {
-            "official" -> ProviderType.OFFICIAL
-            "user", "custom" -> ProviderType.CUSTOM
-            else -> ProviderType.ALL
-        }
-        return Result.success(llmAppService.getProvidersByType(providerType, currentUserId()))
-    }
+    fun getProviders(@RequestParam(required = false, defaultValue = "all") type: String): Result<List<ProviderDTO>> =
+        Result.success(llmAppService.getProvidersByType(ProviderType.fromCode(type), currentUserId()))
 
     @PostMapping("/providers")
     fun createProvider(@RequestBody @Validated providerCreateRequest: ProviderCreateRequest): Result<ProviderDTO?> =
@@ -95,11 +89,9 @@ class PortalLLMController(
 
     @GetMapping("/models")
     fun getModels(@RequestParam(required = false) modelType: String?): Result<List<ModelDTO>> {
-        val type = modelType?.let { value ->
-            ModelType.entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
-        }
+        val type = modelType?.let(ModelType::fromCode)
         return Result.success(llmAppService.getActiveModelsByType(ProviderType.ALL, currentUserId(), type))
     }
 
-    private fun currentUserId(): String = UserContext.getCurrentUserId() ?: "anonymous"
+    private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

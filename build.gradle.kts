@@ -31,6 +31,12 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.baomidou:mybatis-plus-spring-boot3-starter:3.5.15")
     implementation("com.baomidou:mybatis-plus-extension:3.5.15")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
+    implementation("cn.hutool:hutool-crypto:5.8.26")
+    implementation("cn.hutool:hutool-captcha:5.8.26")
+    implementation("org.eclipse.angus:jakarta.mail:2.0.2")
 
 
     // LangChain4j with Kotlin support

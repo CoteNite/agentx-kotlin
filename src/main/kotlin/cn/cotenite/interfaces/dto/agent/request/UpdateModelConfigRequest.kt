@@ -13,11 +13,11 @@ data class UpdateModelConfigRequest(
     var modelId: String? = null,
     @field:Min(value = 0, message = "temperature最小值为0")
     @field:Max(value = 2, message = "temperature最大值为2")
-    var temperature: Double? = null,
+    var temperature: Double = 0.7,
     @field:Min(value = 0, message = "topP最小值为0")
     @field:Max(value = 1, message = "topP最大值为1")
-    var topP: Double? = null,
-    var topK: Int? = null,
+    var topP: Double = 0.7,
+    var topK: Int = 50,
     @field:Min(value = 1, message = "maxTokens最小值为1")
     var maxTokens: Int? = null,
     var strategyType: TokenOverflowStrategyEnum = TokenOverflowStrategyEnum.NONE,

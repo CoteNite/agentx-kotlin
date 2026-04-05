@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.IOException
 
-@Component
+@Component("sse")
 class SseMessageTransport:MessageTransport<SseEmitter> {
 
     companion object{

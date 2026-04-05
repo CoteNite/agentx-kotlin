@@ -2,7 +2,8 @@ package cn.cotenite.application.conversation.service.handler.context
 
 import cn.cotenite.domain.agent.model.AgentEntity
 import cn.cotenite.domain.agent.model.LLMModelConfig
-import cn.cotenite.domain.conversation.constant.Role.*
+import cn.cotenite.domain.conversation.constant.Role.SYSTEM
+import cn.cotenite.domain.conversation.constant.Role.USER
 import cn.cotenite.domain.conversation.model.ContextEntity
 import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.llm.model.ModelEntity
@@ -14,9 +15,7 @@ import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.openai.OpenAiChatRequestParameters
 
 /**
- * @author  yhk
- * Description  
- * Date  2026/3/28 21:30
+ * 对话上下文
  */
 data class ChatContext(
     val sessionId: String,
@@ -28,28 +27,28 @@ data class ChatContext(
     val llmModelConfig: LLMModelConfig,
     val contextEntity: ContextEntity,
     val messageHistory: List<MessageEntity>
-){
+) {
 
     fun prepareChatRequest(): dev.langchain4j.model.chat.request.ChatRequest {
-        val chatMessages=mutableListOf<ChatMessage>()
+        val chatMessages = mutableListOf<ChatMessage>()
 
-        this.agent.systemPrompt?.isNotEmpty().let {
-            chatMessages.add(SystemMessage(this.agent.systemPrompt))
-        }
+        agent.systemPrompt
+            ?.takeIf { it.isNotBlank() }
+            ?.let { chatMessages.add(SystemMessage(it)) }
 
-        this.contextEntity.summary?.isNotEmpty().let {
-            chatMessages.add(AiMessage(AgentPromptTemplate.SUMMARY_PREFIX+this.contextEntity.summary))
-        }
+        contextEntity.summary
+            ?.takeIf { it.isNotBlank() }
+            ?.let { chatMessages.add(AiMessage(AgentPromptTemplates.SUMMARY_PREFIX + it)) }
 
-        this.messageHistory.forEach { messageEntity ->
-            when(messageEntity.role){
-                USER -> chatMessages.add(UserMessage(messageEntity.content))
-                SYSTEM -> chatMessages.add(AiMessage(messageEntity.content))
+        messageHistory.forEach { messageEntity ->
+            when (messageEntity.role) {
+                USER -> chatMessages.add(UserMessage(messageEntity.content ?: ""))
+                SYSTEM -> chatMessages.add(AiMessage(messageEntity.content ?: ""))
                 else -> {}
             }
         }
 
-        chatMessages.add(UserMessage(this.userMessage))
+        chatMessages.add(UserMessage(userMessage))
 
         val parameters = OpenAiChatRequestParameters.builder()
             .modelName(model.modelId)
@@ -57,13 +56,9 @@ data class ChatContext(
             .temperature(llmModelConfig.temperature)
             .build()
 
-
-        return dev.langchain4j.model.chat.request.ChatRequest.Builder()
+        return dev.langchain4j.model.chat.request.ChatRequest.builder()
             .messages(chatMessages)
             .parameters(parameters)
             .build()
     }
-
-
-
 }

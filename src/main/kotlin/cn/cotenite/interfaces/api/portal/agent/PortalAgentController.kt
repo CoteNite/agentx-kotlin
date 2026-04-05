@@ -42,7 +42,7 @@ class PortalAgentController(
 
     @GetMapping("/published")
     fun getPublishedAgents(searchAgentsRequest: SearchAgentsRequest): Result<List<AgentVersionDTO>> =
-        Result.success(agentAppService.getPublishedAgentsByName(searchAgentsRequest))
+        Result.success(agentAppService.getPublishedAgentsByName(searchAgentsRequest, currentUserId()))
 
     @PutMapping("/{agentId}")
     fun updateAgent(
@@ -83,5 +83,5 @@ class PortalAgentController(
     fun getLatestAgentVersion(@PathVariable agentId: String): Result<AgentVersionDTO?> =
         Result.success(agentAppService.getLatestAgentVersion(agentId))
 
-    private fun currentUserId(): String = UserContext.getCurrentUserId() ?: "anonymous"
+    private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

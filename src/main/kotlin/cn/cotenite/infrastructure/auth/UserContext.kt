@@ -17,7 +17,7 @@ object UserContext {
     /**
      * 获取当前用户ID
      */
-    fun getCurrentUserId(): String? = currentUserId.get()
+    fun getCurrentUserId(): String= currentUserId.get()
 
     /**
      * 清除当前用户信息

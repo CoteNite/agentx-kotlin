@@ -57,5 +57,5 @@ class PortalAgentSessionController(
     fun chat(@RequestBody @Validated chatRequest: ChatRequest): SseEmitter =
         conversationAppService.chat(chatRequest, currentUserId())
 
-    private fun currentUserId(): String = UserContext.getCurrentUserId() ?: "anonymous"
+    private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

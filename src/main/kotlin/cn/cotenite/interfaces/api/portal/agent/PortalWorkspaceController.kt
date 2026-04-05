@@ -4,6 +4,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -47,5 +48,11 @@ class PortalWorkspaceController(
     fun getConfiguredModelId(@PathVariable agentId: String): Result<LLMModelConfig> =
         Result.success(agentWorkspaceAppService.getConfiguredModelId(agentId, currentUserId()))
 
-    private fun currentUserId(): String = UserContext.getCurrentUserId() ?: "anonymous"
+    @PostMapping("/{agentId}")
+    fun addAgent(@PathVariable agentId: String): Result<Void> {
+        agentWorkspaceAppService.addAgent(agentId, currentUserId())
+        return Result.success()
+    }
+
+    private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

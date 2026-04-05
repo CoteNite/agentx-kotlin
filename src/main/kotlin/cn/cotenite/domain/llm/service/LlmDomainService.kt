@@ -66,27 +66,21 @@ class LlmDomainService(
         ).let(::buildProviderAggregatesWithActiveModels)
 
     private fun buildProviderAggregatesWithActiveModels(providers: List<ProviderEntity>): List<ProviderAggregate> =
-        providers
-            .takeIf { it.isNotEmpty() }
-            ?.let {
-                val activeModelsByProviderId = modelRepository.selectList(
-                    KtQueryWrapper(ModelEntity::class.java)
-                        .`in`(ModelEntity::providerId, it.mapNotNull(ProviderEntity::id))
-                        .eq(ModelEntity::status, true)
-                ).groupBy(ModelEntity::providerId)
+        providers.takeIf { it.isNotEmpty() }?.let {
+            val activeModelsByProviderId = modelRepository.selectList(
+                KtQueryWrapper(ModelEntity::class.java)
+                    .`in`(ModelEntity::providerId, it.mapNotNull(ProviderEntity::id))
+                    .eq(ModelEntity::status, true)
+            ).groupBy(ModelEntity::providerId)
 
-                it.map { provider -> ProviderAggregate(provider, activeModelsByProviderId[provider.id]) }
-            }
-            ?: emptyList()
+            it.map { provider -> ProviderAggregate(provider, activeModelsByProviderId[provider.id]) }
+        } ?: emptyList()
 
     fun getProvider(providerId: String, userId: String): ProviderEntity =
         providerRepository.selectOne(
             KtQueryWrapper(ProviderEntity::class.java)
                 .eq(ProviderEntity::id, providerId)
                 .eq(ProviderEntity::userId, userId)
-                .or()
-                .eq(ProviderEntity::id, providerId)
-                .eq(ProviderEntity::isOfficial, true)
         ) ?: throw BusinessException("服务商不存在")
 
     fun getProvider(providerId: String): ProviderEntity =

@@ -3,35 +3,35 @@ package cn.cotenite.application.conversation.service.message.agent
 import dev.langchain4j.mcp.McpToolProvider
 import dev.langchain4j.mcp.client.DefaultMcpClient
 import dev.langchain4j.mcp.client.McpClient
-import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport
+import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport
 import dev.langchain4j.service.tool.ToolProvider
 import org.springframework.stereotype.Component
 import java.time.Duration
 
 /**
- * @author  yhk
- * Description  
- * Date  2026/3/29 19:16
+ * Agent 工具管理器
  */
 @Component
 class AgentToolManager {
 
+    fun createToolProvider(toolUrls: List<String>?): ToolProvider? {
+        if (toolUrls.isNullOrEmpty()) {
+            return null
+        }
 
-    fun createToolProvider(toolUrls: List<String>): ToolProvider{
-        val mcpClients=mutableListOf<McpClient>()
-        toolUrls.takeIf { it.isNotEmpty() }.let {
-            toolUrls.forEach { toolUrl ->
-                val transport= StreamableHttpMcpTransport.Builder()
-                    .url(toolUrl)
-                    .logRequests(true)
-                    .logResponses(true)
-                    .timeout(Duration.ofHours(1))
-                    .build()
-                val mcpClient = DefaultMcpClient.Builder()
-                    .transport(transport)
-                    .build()
-                mcpClients.add(mcpClient)
-            }
+        val mcpClients = mutableListOf<McpClient>()
+        toolUrls.forEach { toolUrl ->
+            val transport = HttpMcpTransport.builder()
+                .sseUrl(toolUrl)
+                .logRequests(true)
+                .logResponses(true)
+                .timeout(Duration.ofHours(1))
+                .build()
+
+            val mcpClient = DefaultMcpClient.Builder()
+                .transport(transport)
+                .build()
+            mcpClients.add(mcpClient)
         }
 
         return McpToolProvider.builder()
@@ -39,9 +39,5 @@ class AgentToolManager {
             .build()
     }
 
-
-    fun getAvailableTools(): List<String>{
-        return listOf()
-    }
-
+    fun getAvailableTools(): List<String> = listOf("http://localhost:8005/sse?api_key=123456")
 }

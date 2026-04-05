@@ -45,10 +45,23 @@ class AgentAppService(
             .let { agentDomainService.getUserAgents(userId, it) }
             .let(AgentAssembler::toDTOs)
 
-    fun getPublishedAgentsByName(searchAgentsRequest: SearchAgentsRequest): List<AgentVersionDTO> =
-        AgentEntity().apply { name = searchAgentsRequest.name }
-            .let(agentDomainService::getPublishedAgentsByName)
-            .let(AgentVersionAssembler::toDTOs)
+    fun getPublishedAgentsByName(searchAgentsRequest: SearchAgentsRequest, userId: String): List<AgentVersionDTO> {
+        val entity = AgentAssembler.toEntity(searchAgentsRequest)
+        val agentVersionEntities = agentDomainService.getPublishedAgentsByName(entity)
+        if (agentVersionEntities.isEmpty()) {
+            return emptyList()
+        }
+
+        val agentIds = agentVersionEntities.mapNotNull { it.agentId }
+        val workspaceAgentIds = agentWorkspaceDomainService
+            .listAgents(agentIds, userId)
+            .mapNotNull { it.agentId }
+            .toSet()
+
+        return AgentVersionAssembler.toDTOs(agentVersionEntities).onEach { dto ->
+            dto.addWorkspace = dto.agentId in workspaceAgentIds
+        }
+    }
 
     fun updateAgent(request: UpdateAgentRequest, userId: String): AgentDTO? =
         AgentAssembler.toEntity(request, userId)

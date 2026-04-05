@@ -60,4 +60,15 @@ class AgentWorkspaceDomainService(
                 .eq(AgentWorkspaceEntity::userId, workspace.userId)
         )
     }
+
+    fun listAgents(agentIds: List<String>, userId: String): List<AgentWorkspaceEntity> {
+        if (agentIds.isEmpty()) {
+            return emptyList()
+        }
+        return agentWorkspaceRepository.selectList(
+            KtQueryWrapper(AgentWorkspaceEntity::class.java)
+                .eq(AgentWorkspaceEntity::userId, userId)
+                .`in`(AgentWorkspaceEntity::agentId, agentIds)
+        )
+    }
 }

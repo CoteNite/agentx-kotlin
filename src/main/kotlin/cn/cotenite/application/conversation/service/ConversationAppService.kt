@@ -52,7 +52,7 @@ class ConversationAppService(
         val sessionEntity = sessionDomainService.find(sessionId, userId)
             ?: throw BusinessException("会话不存在")
 
-        return conversationDomainService.getConversationMessages(sessionEntity.id)
+        return conversationDomainService.getConversationMessages(sessionId)
             .let { MessageAssembler.toDTOs(it) }
     }
 

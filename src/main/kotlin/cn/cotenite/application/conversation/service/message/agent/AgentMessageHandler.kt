@@ -20,7 +20,7 @@ class AgentMessageHandler(
 
 
     // todo xhy 从 agent 中获取
-    override fun provideTools(): ToolProvider {
+    override fun provideTools(): ToolProvider? {
         return agentToolManager.createToolProvider(
             agentToolManager.getAvailableTools()
         )

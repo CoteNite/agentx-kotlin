@@ -33,9 +33,16 @@ class LLMAppService(
             .let(ProviderAssembler::toDTO)
 
     fun updateProvider(providerUpdateRequest: ProviderUpdateRequest, userId: String): ProviderDTO? {
+        val providerId = providerUpdateRequest.id ?: return null
+        val existingProvider = llmDomainService.getProvider(providerId, userId)
+
+        if (providerUpdateRequest.config?.apiKey?.matches(Regex("\\*+")) == true) {
+            providerUpdateRequest.config?.apiKey = existingProvider.config?.apiKey
+        }
+
         val provider = ProviderAssembler.toEntity(providerUpdateRequest, userId)
         llmDomainService.updateProvider(provider)
-        return provider.id?.let { llmDomainService.getProvider(it, userId) }?.let(ProviderAssembler::toDTO)
+        return ProviderAssembler.toDTO(provider)
     }
 
     fun getProvider(providerId: String, userId: String): ProviderDTO? = getProviderDetail(providerId, userId)
@@ -57,23 +64,23 @@ class LLMAppService(
 
     fun getUserProviderProtocols(): List<ProviderProtocol> = llmDomainService.getProviderProtocols()
 
-    fun createModel(modelCreateRequest: ModelCreateRequest, userId: String): ModelDTO? =
-        ModelAssembler.toEntity(modelCreateRequest, userId)
-            .apply {
-                isOfficial = false
-                status = true
-            }
-            .also(llmDomainService::createModel)
-            .let(ModelAssembler::toDTO)
+    fun createModel(modelCreateRequest: ModelCreateRequest, userId: String): ModelDTO? {
+        llmDomainService.checkProviderExists(modelCreateRequest.providerId ?: return null, userId)
+        val model = ModelAssembler.toEntity(modelCreateRequest, userId).apply {
+            isOfficial = false
+        }
+        llmDomainService.createModel(model)
+        return ModelAssembler.toDTO(model)
+    }
 
     fun updateModel(modelUpdateRequest: ModelUpdateRequest, userId: String): ModelDTO? {
         val model = ModelAssembler.toEntity(modelUpdateRequest, userId)
         llmDomainService.updateModel(model)
-        return model.id?.let(llmDomainService::getModelById)?.let(ModelAssembler::toDTO)
+        return ModelAssembler.toDTO(model)
     }
 
     fun deleteModel(modelId: String, userId: String) =
-        llmDomainService.deleteModel(modelId, userId, Operator.USER)
+        llmDomainService.deleteModel(modelId, userId, Operator.ADMIN)
 
     fun updateModelStatus(modelId: String, userId: String) =
         llmDomainService.updateModelStatus(modelId, userId)
@@ -86,8 +93,8 @@ class LLMAppService(
 
     fun getActiveModelsByType(providerType: ProviderType, userId: String, modelType: ModelType?): List<ModelDTO> =
         llmDomainService.getProvidersByType(providerType, userId)
+            .filter { it.getStatus() }
             .flatMap { it.getModels() }
-            .filter { it.status }
             .filter { modelType == null || it.type == modelType }
             .mapNotNull(ModelAssembler::toDTO)
 }

@@ -26,6 +26,7 @@ data class AgentVersionDTO(
     var reviewTime: LocalDateTime? = null,
     var publishedAt: LocalDateTime? = null,
     var userId: String? = null,
+    var addWorkspace: Boolean? = null,
     var createdAt: LocalDateTime? = null,
     var updatedAt: LocalDateTime? = null
 ) {

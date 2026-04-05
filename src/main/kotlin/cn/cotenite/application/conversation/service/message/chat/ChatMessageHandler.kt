@@ -15,4 +15,5 @@ class ChatMessageHandler(
     override val llmServiceFactory: LLMServiceFactory,
     override val messageDomainService: MessageDomainService,
 ): AbstractMessageHandler(llmServiceFactory, messageDomainService){
+
 }
