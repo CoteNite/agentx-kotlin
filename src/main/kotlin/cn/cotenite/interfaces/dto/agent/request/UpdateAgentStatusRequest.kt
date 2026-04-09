@@ -1,4 +1,4 @@
-package cn.cotenite.interfaces.dto.agent
+package cn.cotenite.interfaces.dto.agent.request
 
 import cn.cotenite.infrastructure.exception.ParamValidationException
 

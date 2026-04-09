@@ -14,10 +14,10 @@ import cn.cotenite.application.agent.dto.AgentVersionDTO
 import cn.cotenite.application.agent.service.AgentAppService
 import cn.cotenite.infrastructure.auth.UserContext
 import cn.cotenite.interfaces.api.common.Result
-import cn.cotenite.interfaces.dto.agent.CreateAgentRequest
-import cn.cotenite.interfaces.dto.agent.PublishAgentVersionRequest
-import cn.cotenite.interfaces.dto.agent.SearchAgentsRequest
-import cn.cotenite.interfaces.dto.agent.UpdateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.CreateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.PublishAgentVersionRequest
+import cn.cotenite.interfaces.dto.agent.request.SearchAgentsRequest
+import cn.cotenite.interfaces.dto.agent.request.UpdateAgentRequest
 
 /**
  * 用户Agent管理控制器
@@ -49,7 +49,7 @@ class PortalAgentController(
         @PathVariable agentId: String,
         @RequestBody @Validated request: UpdateAgentRequest
     ): Result<AgentDTO?> = Result.success(
-        agentAppService.updateAgent(request.apply { this.agentId = agentId }, currentUserId())
+        agentAppService.updateAgent(request.apply { this.id = agentId }, currentUserId())
     )
 
     @PutMapping("/{agentId}/toggle-status")

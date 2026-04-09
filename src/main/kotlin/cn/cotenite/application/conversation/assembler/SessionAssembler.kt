@@ -30,6 +30,6 @@ object SessionAssembler {
             createdAt = session["createdAt"] as? LocalDateTime,
             updatedAt = session["updatedAt"] as? LocalDateTime,
             isArchived = session["isArchived"] as? Boolean ?: false,
-            agentId = session["agentId"] as? String
+            agentId = session["id"] as? String
         )
 }

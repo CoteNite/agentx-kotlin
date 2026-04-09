@@ -21,9 +21,8 @@ noArg{
     invokeInitializers = true
 }
 
-repositories {
-    mavenCentral()
-}
+
+val langchainVersion="1.0.4.2-beta7-SNAPSHOT"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -32,6 +31,11 @@ dependencies {
     implementation("com.baomidou:mybatis-plus-spring-boot3-starter:3.5.15")
     implementation("com.baomidou:mybatis-plus-extension:3.5.15")
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    implementation("org.apache.httpcomponents.client5:httpclient5")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
+    implementation("net.lingala.zip4j:zip4j:2.11.5")
+    implementation("org.kohsuke:github-api:1.330")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
     implementation("cn.hutool:hutool-crypto:5.8.26")
@@ -40,12 +44,12 @@ dependencies {
 
 
     // LangChain4j with Kotlin support
-    implementation("dev.langchain4j:langchain4j:1.12.2")
+    implementation("com.github.lucky-aeon.langchain4j:langchain4j:${langchainVersion}")
+    implementation("com.github.lucky-aeon.langchain4j:langchain4j-mcp:${langchainVersion}")
+    implementation("com.github.lucky-aeon.langchain4j:langchain4j-open-ai:${langchainVersion}")
+    implementation("com.github.lucky-aeon.langchain4j:langchain4j-anthropic:${langchainVersion}")
     implementation("dev.langchain4j:langchain4j-kotlin:1.12.2-beta22")
-    implementation("dev.langchain4j:langchain4j-anthropic:1.12.2")
-    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.12.2-beta22")
-    implementation("dev.langchain4j:langchain4j-mcp:1.12.2-beta22")
-    implementation("dev.langchain4j:langchain4j-open-ai:1.12.2")
+// ----------------------------------------
     
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")

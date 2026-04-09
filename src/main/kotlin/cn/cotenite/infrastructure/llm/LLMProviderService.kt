@@ -11,7 +11,7 @@ import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
  */
 object LLMProviderService {
 
-    fun getNormal(protocol: ProviderProtocol, providerConfig: ProviderConfig): ChatModel =
+    fun getStrand(protocol: ProviderProtocol, providerConfig: ProviderConfig): ChatModel =
         LLMProviderFactory.getLLMProvider(protocol, providerConfig)
 
     fun getStream(protocol: ProviderProtocol, providerConfig: ProviderConfig): StreamingChatModel =

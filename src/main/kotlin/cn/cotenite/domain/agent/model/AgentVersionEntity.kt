@@ -1,12 +1,13 @@
 package cn.cotenite.domain.agent.model
 
+import cn.cotenite.domain.agent.constant.PublishStatus
+import cn.cotenite.infrastructure.converter.ListConverter
+import cn.cotenite.infrastructure.converter.MapConverter
+import cn.cotenite.infrastructure.entity.BaseEntity
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import cn.cotenite.domain.agent.constant.PublishStatus
-import cn.cotenite.infrastructure.converter.ListConverter
-import cn.cotenite.infrastructure.entity.BaseEntity
 import java.time.LocalDateTime
 
 /**
@@ -30,8 +31,8 @@ class AgentVersionEntity : BaseEntity() {
     var systemPrompt: String? = null
     @TableField("welcome_message")
     var welcomeMessage: String? = null
-    @TableField(value = "tools", typeHandler = ListConverter::class)
-    var tools: MutableList<AgentTool> = mutableListOf()
+    @TableField(value = "tool_ids", typeHandler = ListConverter::class)
+    var toolIds: MutableList<String> = mutableListOf()
     @TableField(value = "knowledge_base_ids", typeHandler = ListConverter::class)
     var knowledgeBaseIds: MutableList<String> = mutableListOf()
     @TableField("change_log")
@@ -48,6 +49,9 @@ class AgentVersionEntity : BaseEntity() {
     var publishedAt: LocalDateTime? = null
     @TableField("user_id")
     var userId: String? = null
+    /** 预先设置的工具参数  */
+    @TableField(value = "tool_preset_params", typeHandler = MapConverter::class)
+    var toolPresetParams: MutableMap<String?, MutableMap<String?, String?>?>? = null
 
     fun getPublishStatusEnum(): PublishStatus = PublishStatus.fromCode(publishStatus)
 
@@ -73,7 +77,7 @@ class AgentVersionEntity : BaseEntity() {
                 this.versionNumber = versionNumber
                 systemPrompt = agent.systemPrompt
                 welcomeMessage = agent.welcomeMessage
-                tools = agent.tools
+                toolIds = agent.toolIds
                 knowledgeBaseIds = agent.knowledgeBaseIds
                 this.changeLog = changeLog
                 agentType = agent.agentType

@@ -10,7 +10,7 @@ import cn.cotenite.application.agent.dto.AgentVersionDTO
 import cn.cotenite.application.agent.service.AgentAppService
 import cn.cotenite.domain.agent.constant.PublishStatus
 import cn.cotenite.interfaces.api.common.Result
-import cn.cotenite.interfaces.dto.agent.ReviewAgentVersionRequest
+import cn.cotenite.interfaces.dto.agent.request.ReviewAgentVersionRequest
 
 /**
  * 管理员Agent管理控制器

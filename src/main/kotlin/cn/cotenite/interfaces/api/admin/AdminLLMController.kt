@@ -13,10 +13,10 @@ import cn.cotenite.application.llm.dto.ModelDTO
 import cn.cotenite.application.llm.dto.ProviderDTO
 import cn.cotenite.infrastructure.auth.UserContext
 import cn.cotenite.interfaces.api.common.Result
-import cn.cotenite.interfaces.dto.llm.ModelCreateRequest
-import cn.cotenite.interfaces.dto.llm.ModelUpdateRequest
-import cn.cotenite.interfaces.dto.llm.ProviderCreateRequest
-import cn.cotenite.interfaces.dto.llm.ProviderUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
 
 /**
  * 管理员LLM管理控制器
@@ -63,5 +63,5 @@ class AdminLLMController(
         return Result.success()
     }
 
-    private fun currentUserId(): String = UserContext.getCurrentUserId() ?: "admin"
+    private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

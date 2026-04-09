@@ -15,7 +15,7 @@ data class AgentDTO(
     var description: String? = null,
     var systemPrompt: String? = null,
     var welcomeMessage: String? = null,
-    var tools: List<AgentTool> = emptyList(),
+    var toolIds: List<String> = emptyList(),
     var knowledgeBaseIds: List<String> = emptyList(),
     var publishedVersion: String? = null,
     var enabled: Boolean = true,

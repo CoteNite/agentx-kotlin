@@ -1,5 +1,6 @@
 package cn.cotenite.infrastructure.converter
 
+import com.fasterxml.jackson.core.type.TypeReference
 import org.apache.ibatis.type.BaseTypeHandler
 import org.apache.ibatis.type.JdbcType
 import org.apache.ibatis.type.MappedJdbcTypes
@@ -14,8 +15,13 @@ import java.sql.Types
  */
 @MappedJdbcTypes(JdbcType.OTHER)
 abstract class JsonToStringConverter<T>(
-    private val type: Class<T>
+    private val type: Class<T>? = null,
+    private val typeReference: TypeReference<T>? = null
 ) : BaseTypeHandler<T>() {
+
+    protected constructor(type: Class<T>) : this(type = type, typeReference = null)
+
+    protected constructor(typeReference: TypeReference<T>) : this(type = null, typeReference = typeReference)
 
     override fun setNonNullParameter(ps: PreparedStatement, i: Int, parameter: T, jdbcType: JdbcType?) {
         ps.setObject(i, JsonUtils.toJsonString(parameter), Types.OTHER)
@@ -31,5 +37,8 @@ abstract class JsonToStringConverter<T>(
         parseJson(cs.getString(columnIndex))
 
     private fun parseJson(json: String?): T? =
-        json?.takeIf { it.isNotBlank() }?.let { JsonUtils.parseObject(it, type) }
+        json?.takeIf { it.isNotBlank() }?.let {
+            typeReference?.let { ref -> JsonUtils.parseObject(it, ref) }
+                ?: JsonUtils.parseObject(it, requireNotNull(type))
+        }
 }

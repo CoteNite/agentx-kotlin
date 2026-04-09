@@ -26,7 +26,8 @@ data class ChatContext(
     val provider: ProviderEntity,
     val llmModelConfig: LLMModelConfig,
     val contextEntity: ContextEntity,
-    val messageHistory: List<MessageEntity>
+    val messageHistory: List<MessageEntity>,
+    val mcpServerName: List<String?>
 ) {
 
     fun prepareChatRequest(): dev.langchain4j.model.chat.request.ChatRequest {

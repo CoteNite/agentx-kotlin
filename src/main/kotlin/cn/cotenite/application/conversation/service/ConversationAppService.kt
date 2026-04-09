@@ -22,9 +22,12 @@ import cn.cotenite.domain.shared.enums.TokenOverflowStrategyEnum
 import cn.cotenite.domain.token.model.TokenMessage
 import cn.cotenite.domain.token.model.config.TokenOverflowConfig
 import cn.cotenite.domain.token.service.TokenDomainService
+import cn.cotenite.domain.tool.model.UserToolEntity
+import cn.cotenite.domain.tool.service.UserToolDomainService
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.llm.config.ProviderConfig
 import cn.cotenite.infrastructure.transport.MessageTransportFactory
+import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
@@ -45,7 +48,8 @@ class ConversationAppService(
     private val tokenDomainService: TokenDomainService,
     private val messageDomainService: MessageDomainService,
     private val messageHandlerFactory: MessageHandlerFactory,
-    private val transportFactory: MessageTransportFactory
+    private val transportFactory: MessageTransportFactory,
+    private val userToolDomainService: UserToolDomainService
 ) {
 
     fun getConversationMessages(sessionId: String, userId: String): List<MessageDTO> {
@@ -76,6 +80,27 @@ class ConversationAppService(
             if (this.userId != userId && !this.enabled) throw BusinessException("agent已被禁用")
         }
 
+        var toolIds= agent.toolIds
+
+
+        // 在工作区中的助理会分为用户自己创建的和安装的助理，因此需要区分 agent，如果 agent 的 userId 等于当前用户则使用 agent，反之使用
+        // agent_version
+        if (!agent.userId.equals(userId)) {
+            val latestAgentVersion = agentDomainService.getLatestAgentVersion(agentId)
+            // 直接转换即可
+            latestAgentVersion?.let { toolIds = it.toolIds }?:throw BusinessException("")
+            BeanUtils.copyProperties(latestAgentVersion, agent)
+        }
+
+
+        // 校验工具的可用性
+        val installTool = userToolDomainService.getInstallTool(toolIds, userId)
+
+
+        // 获取 mcp server name
+        val mcpServerNames = installTool.map(UserToolEntity::mcpServerName).toList()
+
+
         val workspace = agentWorkspaceDomainService.getWorkspace(agentId, userId)
         val llmModelConfig = workspace.llmModelConfig
         val model = llmDomainService.getModelById(llmModelConfig.modelId?:throw BusinessException("模型不存在")).apply { isActive() }
@@ -88,7 +113,8 @@ class ConversationAppService(
             agent = agent,
             model = model,
             provider = provider,
-            llmModelConfig = llmModelConfig
+            llmModelConfig = llmModelConfig,
+            mcpServerName=mcpServerNames
         )
     }
 
@@ -99,7 +125,9 @@ class ConversationAppService(
         agent: AgentEntity,
         model: ModelEntity,
         provider: ProviderEntity,
-        llmModelConfig: LLMModelConfig,): ChatContext
+        llmModelConfig: LLMModelConfig,
+        mcpServerName: List<String?>
+    ): ChatContext
     {
 
 
@@ -122,7 +150,8 @@ class ConversationAppService(
             provider = provider,
             llmModelConfig = llmModelConfig,
             contextEntity = contextEntity,
-            messageHistory = messageEntities
+            messageHistory = messageEntities,
+            mcpServerName=mcpServerName
         )
 
     }

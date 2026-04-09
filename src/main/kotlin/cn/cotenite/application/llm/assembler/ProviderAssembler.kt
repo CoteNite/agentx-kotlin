@@ -5,8 +5,8 @@ import cn.cotenite.domain.llm.model.ProviderAggregate
 import cn.cotenite.domain.llm.model.ProviderEntity
 import cn.cotenite.domain.llm.model.config.ProviderConfig
 import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
-import cn.cotenite.interfaces.dto.llm.ProviderCreateRequest
-import cn.cotenite.interfaces.dto.llm.ProviderUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
 import java.time.LocalDateTime
 
 /**

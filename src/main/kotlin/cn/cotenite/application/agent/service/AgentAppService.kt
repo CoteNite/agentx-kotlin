@@ -7,17 +7,16 @@ import cn.cotenite.application.agent.assembler.AgentVersionAssembler
 import cn.cotenite.application.agent.dto.AgentDTO
 import cn.cotenite.application.agent.dto.AgentVersionDTO
 import cn.cotenite.domain.agent.constant.PublishStatus
-import cn.cotenite.domain.agent.model.AgentEntity
 import cn.cotenite.domain.agent.model.AgentWorkspaceEntity
 import cn.cotenite.domain.agent.model.LLMModelConfig
 import cn.cotenite.domain.agent.service.AgentDomainService
 import cn.cotenite.domain.agent.service.AgentWorkspaceDomainService
 import cn.cotenite.infrastructure.exception.BusinessException
-import cn.cotenite.interfaces.dto.agent.CreateAgentRequest
-import cn.cotenite.interfaces.dto.agent.PublishAgentVersionRequest
-import cn.cotenite.interfaces.dto.agent.ReviewAgentVersionRequest
-import cn.cotenite.interfaces.dto.agent.SearchAgentsRequest
-import cn.cotenite.interfaces.dto.agent.UpdateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.CreateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.PublishAgentVersionRequest
+import cn.cotenite.interfaces.dto.agent.request.ReviewAgentVersionRequest
+import cn.cotenite.interfaces.dto.agent.request.SearchAgentsRequest
+import cn.cotenite.interfaces.dto.agent.request.UpdateAgentRequest
 
 /**
  * Agent应用服务

@@ -1,7 +1,9 @@
 package cn.cotenite.application.conversation.service.message.agent
 
+import cn.cotenite.application.conversation.service.handler.context.ChatContext
 import cn.cotenite.application.conversation.service.message.AbstractMessageHandler
 import cn.cotenite.domain.conversation.service.MessageDomainService
+import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.llm.LLMServiceFactory
 import dev.langchain4j.service.tool.ToolProvider
 import org.springframework.stereotype.Component
@@ -19,11 +21,11 @@ class AgentMessageHandler(
 ): AbstractMessageHandler(llmServiceFactory,messageDomainService) {
 
 
-    // todo xhy 从 agent 中获取
-    override fun provideTools(): ToolProvider? {
+    override fun provideTools(chatContext: ChatContext): ToolProvider {
         return agentToolManager.createToolProvider(
-            agentToolManager.getAvailableTools()
-        )
+            agentToolManager.getAvailableTools(chatContext),
+            chatContext.agent.toolPresetParams
+        )?:throw BusinessException("无法获取工具")
     }
 
 }

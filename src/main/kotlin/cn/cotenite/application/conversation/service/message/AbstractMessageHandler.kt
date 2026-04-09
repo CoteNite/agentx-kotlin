@@ -42,7 +42,7 @@ abstract class AbstractMessageHandler(
         messageDomainService.saveMessageAndUpdateContext(listOf(userMessageEntity), chatContext.contextEntity)
 
         val memory = initMemory().also { buildHistoryMessage(chatContext, it) }
-        val agent = buildAgent(model, memory, provideTools())
+        val agent = buildAgent(model, memory, provideTools(chatContext))
         processChat(agent, connection, transport, chatContext, userMessageEntity, llmMessageEntity)
         return connection
     }
@@ -119,11 +119,17 @@ abstract class AbstractMessageHandler(
             ?.takeIf { it.isNotBlank() }
             ?.let { summary -> memory.add(AiMessage(AgentPromptTemplates.SUMMARY_PREFIX + summary)) }
 
-        memory.add(
-            SystemMessage(
-                (chatContext.agent.systemPrompt ?: "") + "\n" + AgentPromptTemplates.IGNORE_SENSITIVE_INFO_PROMPT
-            )
-        )
+        var presetToolPrompt = ""
+
+        // 设置预先工具设置的参数到系统提示词中
+        val toolPresetParams = chatContext.agent.toolPresetParams
+        if (toolPresetParams != null) {
+            presetToolPrompt = AgentPromptTemplates.generatePresetToolPrompt(toolPresetParams)
+        }
+
+
+        memory.add(SystemMessage(chatContext.agent.systemPrompt + "\n" + presetToolPrompt))
+
 
         chatContext.messageHistory.forEach { messageEntity ->
             when {
@@ -134,7 +140,7 @@ abstract class AbstractMessageHandler(
         }
     }
 
-    protected open fun provideTools(): ToolProvider? = null
+    protected open fun provideTools(chatContext: ChatContext): ToolProvider? = null
 
     protected fun createLlmMessage(environment: ChatContext) = MessageEntity().apply {
         role = ASSISTANT

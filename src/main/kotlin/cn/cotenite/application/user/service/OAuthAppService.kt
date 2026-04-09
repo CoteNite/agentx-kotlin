@@ -15,6 +15,8 @@ import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.utils.JwtUtils
 import cn.cotenite.interfaces.dto.user.GitHubTokenResponse
 import cn.cotenite.interfaces.dto.user.GitHubUserInfo
+import org.springframework.web.client.exchange
+import org.springframework.web.client.postForObject
 import kotlin.random.Random
 
 /**
@@ -65,11 +67,10 @@ class OAuthAppService(
             "redirect_uri" to githubProperties.redirectUri
         )
 
-        return restTemplate.postForObject(
-            githubProperties.tokenUrl,
-            HttpEntity(body, headers),
-            GitHubTokenResponse::class.java
-        ) ?: throw BusinessException("获取GitHub访问令牌失败")
+        return restTemplate.postForObject<GitHubTokenResponse>(
+        githubProperties.tokenUrl,
+        HttpEntity(body, headers)
+        )
     }
 
     private fun getUserInfo(accessToken: String): GitHubUserInfo {
@@ -77,11 +78,10 @@ class OAuthAppService(
             accept = listOf(MediaType.APPLICATION_JSON)
             set(HttpHeaders.AUTHORIZATION, "token $accessToken")
         }
-        return restTemplate.exchange(
-            githubProperties.userInfoUrl!!,
+        return restTemplate.exchange<GitHubUserInfo>(
+            githubProperties.userInfoUrl,
             HttpMethod.GET,
-            HttpEntity<Unit>(headers),
-            GitHubUserInfo::class.java
+            HttpEntity<Unit>(headers)
         ).body ?: throw BusinessException("获取GitHub用户信息失败")
     }
 
@@ -91,7 +91,7 @@ class OAuthAppService(
             set(HttpHeaders.AUTHORIZATION, "token $accessToken")
         }
         val response = restTemplate.exchange(
-            githubProperties.userEmailUrl!!,
+            githubProperties.userEmailUrl,
             HttpMethod.GET,
             HttpEntity<Unit>(headers),
             List::class.java

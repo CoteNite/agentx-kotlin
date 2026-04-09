@@ -193,7 +193,7 @@ class AgentDomainService(
                     description = versionEntity.description
                     systemPrompt = versionEntity.systemPrompt
                     welcomeMessage = versionEntity.welcomeMessage
-                    tools = versionEntity.tools
+                    toolIds = versionEntity.toolIds
                     knowledgeBaseIds = versionEntity.knowledgeBaseIds
                     agentType = versionEntity.agentType ?: agentType
                 }

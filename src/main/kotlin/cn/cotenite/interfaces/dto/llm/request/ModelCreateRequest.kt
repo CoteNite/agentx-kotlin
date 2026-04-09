@@ -1,4 +1,4 @@
-package cn.cotenite.interfaces.dto.llm
+package cn.cotenite.interfaces.dto.llm.request
 
 import jakarta.validation.constraints.NotBlank
 import cn.cotenite.domain.llm.model.enums.ModelType

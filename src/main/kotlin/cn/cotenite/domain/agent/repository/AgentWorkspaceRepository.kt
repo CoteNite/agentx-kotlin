@@ -12,6 +12,6 @@ import cn.cotenite.infrastructure.repository.MyBatisPlusExtRepository
 @Mapper
 interface AgentWorkspaceRepository : MyBatisPlusExtRepository<AgentWorkspaceEntity> {
 
-    @Select("SELECT EXISTS(SELECT 1 FROM agent_workspace WHERE agent_id = #{agentId} AND user_id = #{userId})")
-    fun exist(@Param("agentId") agentId: String, @Param("userId") userId: String): Boolean
+    @Select("SELECT EXISTS(SELECT 1 FROM agent_workspace WHERE agent_id = #{id} AND user_id = #{userId})")
+    fun exist(@Param("id") agentId: String, @Param("userId") userId: String): Boolean
 }

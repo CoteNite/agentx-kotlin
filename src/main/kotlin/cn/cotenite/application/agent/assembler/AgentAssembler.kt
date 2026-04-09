@@ -2,10 +2,10 @@ package cn.cotenite.application.agent.assembler
 
 import cn.cotenite.application.agent.dto.AgentDTO
 import cn.cotenite.domain.agent.model.AgentEntity
-import cn.cotenite.domain.agent.model.AgentTool
-import cn.cotenite.interfaces.dto.agent.CreateAgentRequest
-import cn.cotenite.interfaces.dto.agent.SearchAgentsRequest
-import cn.cotenite.interfaces.dto.agent.UpdateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.CreateAgentRequest
+import cn.cotenite.interfaces.dto.agent.request.SearchAgentsRequest
+import cn.cotenite.interfaces.dto.agent.request.UpdateAgentRequest
+import org.springframework.beans.BeanUtils
 import java.time.LocalDateTime
 
 /**
@@ -24,44 +24,28 @@ object AgentAssembler {
             agentType = request.agentType.code
             this.userId = userId
             enabled = true
-            tools = request.tools.orEmpty().toMutableList()
+            toolIds = request.toolIds.orEmpty().toMutableList()
             knowledgeBaseIds = request.knowledgeBaseIds.orEmpty().toMutableList()
+            toolPresetParams=request.toolPresetParams
             createdAt = now
             updatedAt = now
         }
     }
 
-    fun toEntity(request: UpdateAgentRequest, userId: String): AgentEntity = AgentEntity().apply {
-        id = request.agentId
-        name = request.name
-        description = request.description
-        avatar = request.avatar
-        systemPrompt = request.systemPrompt
-        welcomeMessage = request.welcomeMessage
-        tools = request.tools.orEmpty().toMutableList()
-        knowledgeBaseIds = request.knowledgeBaseIds.orEmpty().toMutableList()
-        enabled = request.enabled ?: true
-        this.userId = userId
-        updatedAt = LocalDateTime.now()
+    fun toEntity(request: UpdateAgentRequest, userId: String): AgentEntity {
+        val entity= AgentEntity()
+        BeanUtils.copyProperties(request, entity)
+        entity.userId=userId
+        return entity
     }
 
-    fun toDTO(entity: AgentEntity?): AgentDTO? = entity?.let {
-        AgentDTO(
-            id = it.id,
-            name = it.name,
-            avatar = it.avatar,
-            description = it.description,
-            systemPrompt = it.systemPrompt,
-            welcomeMessage = it.welcomeMessage,
-            tools = it.tools,
-            knowledgeBaseIds = it.knowledgeBaseIds,
-            publishedVersion = it.publishedVersion,
-            enabled = it.enabled,
-            agentType = it.agentType,
-            userId = it.userId,
-            createdAt = it.createdAt,
-            updatedAt = it.updatedAt
-        )
+    fun toDTO(entity: AgentEntity?): AgentDTO? {
+        if (entity==null){
+            return null
+        }
+        val dto = AgentDTO()
+        BeanUtils.copyProperties(entity,dto)
+        return dto
     }
 
     fun toDTOs(agents: List<AgentEntity>?): List<AgentDTO> = agents.orEmpty().mapNotNull(::toDTO)
@@ -77,7 +61,7 @@ object AgentAssembler {
             description = it["description"] as? String,
             systemPrompt = it["systemPrompt"] as? String,
             welcomeMessage = it["welcomeMessage"] as? String,
-            tools = (it["tools"] as? List<AgentTool>).orEmpty(),
+            toolIds = (it["toolIds"] as? List<String>).orEmpty(),
             knowledgeBaseIds = (it["knowledgeBaseIds"] as? List<String>).orEmpty(),
             publishedVersion = it["publishedVersion"] as? String,
             enabled = it["enabled"] as? Boolean ?: true,

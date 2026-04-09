@@ -10,10 +10,10 @@ import cn.cotenite.domain.llm.model.enums.ProviderType
 import cn.cotenite.domain.llm.service.LlmDomainService
 import cn.cotenite.infrastructure.entity.Operator
 import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
-import cn.cotenite.interfaces.dto.llm.ModelCreateRequest
-import cn.cotenite.interfaces.dto.llm.ModelUpdateRequest
-import cn.cotenite.interfaces.dto.llm.ProviderCreateRequest
-import cn.cotenite.interfaces.dto.llm.ProviderUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
 
 /**
  * LLM应用服务

@@ -1,4 +1,4 @@
-package cn.cotenite.interfaces.dto.llm
+package cn.cotenite.interfaces.dto.llm.request
 
 import jakarta.validation.constraints.NotBlank
 

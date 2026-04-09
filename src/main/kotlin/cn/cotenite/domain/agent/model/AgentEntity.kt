@@ -1,11 +1,13 @@
 package cn.cotenite.domain.agent.model
 
+import cn.cotenite.domain.agent.constant.AgentType
+import cn.cotenite.infrastructure.converter.ListStringConverter
+import cn.cotenite.infrastructure.converter.MapConverter
+import cn.cotenite.infrastructure.entity.BaseEntity
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import cn.cotenite.domain.agent.constant.AgentType
-import cn.cotenite.infrastructure.entity.BaseEntity
 import java.time.LocalDateTime
 
 /**
@@ -25,8 +27,9 @@ class AgentEntity : BaseEntity() {
     var systemPrompt: String? = null
     @TableField("welcome_message")
     var welcomeMessage: String? = null
-    @TableField(value = "tools", exist = false)
-    var tools: MutableList<AgentTool> = mutableListOf()
+    /** Agent可使用的工具列表  */
+    @TableField(value = "tool_ids", typeHandler = ListStringConverter::class)
+    var toolIds: MutableList<String> =mutableListOf()
     @TableField(value = "knowledge_base_ids", exist = false)
     var knowledgeBaseIds: MutableList<String> = mutableListOf()
     @TableField("published_version")
@@ -37,6 +40,11 @@ class AgentEntity : BaseEntity() {
     var agentType: Int = AgentType.CHAT_ASSISTANT.code
     @TableField("user_id")
     var userId: String? = null
+
+    /** 预先设置工具参数，结构如下： { "<mcpServerName>":{ "toolName":"paranms" } } </mcpServerName> */
+    @TableField(value = "tool_preset_params", typeHandler = MapConverter::class)
+    var toolPresetParams: MutableMap<String?, MutableMap<String?, MutableMap<String?, String?>?>?>? = null
+
 
     companion object {
         fun createNew(
@@ -67,18 +75,6 @@ class AgentEntity : BaseEntity() {
         updatedAt = LocalDateTime.now()
     }
 
-    fun updateConfig(
-        systemPrompt: String?,
-        welcomeMessage: String?,
-        tools: List<AgentTool>?,
-        knowledgeBaseIds: List<String>?
-    ) {
-        this.systemPrompt = systemPrompt
-        this.welcomeMessage = welcomeMessage
-        this.tools = tools?.toMutableList() ?: mutableListOf()
-        this.knowledgeBaseIds = knowledgeBaseIds?.toMutableList() ?: mutableListOf()
-        updatedAt = LocalDateTime.now()
-    }
 
     fun enable() = run {
         enabled = true
@@ -100,4 +96,5 @@ class AgentEntity : BaseEntity() {
     }
 
     fun getAgentTypeEnum(): AgentType = AgentType.fromCode(agentType)
+
 }

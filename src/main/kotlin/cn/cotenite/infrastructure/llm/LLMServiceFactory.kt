@@ -44,7 +44,7 @@ class LLMServiceFactory{
             protocol
         )
 
-        return LLMProviderService.getNormal(protocol, providerConfig)
+        return LLMProviderService.getStrand(protocol, providerConfig)
     }
 
 

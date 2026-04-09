@@ -17,7 +17,7 @@ data class AgentVersionDTO(
     var versionNumber: String? = null,
     var systemPrompt: String? = null,
     var welcomeMessage: String? = null,
-    var tools: List<AgentTool> = emptyList(),
+    var toolIds: List<String> = emptyList(),
     var knowledgeBaseIds: List<String> = emptyList(),
     var changeLog: String? = null,
     var agentType: Int? = null,

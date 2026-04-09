@@ -4,7 +4,7 @@ import cn.cotenite.application.agent.dto.AgentVersionDTO
 import cn.cotenite.domain.agent.model.AgentEntity
 import cn.cotenite.domain.agent.model.AgentTool
 import cn.cotenite.domain.agent.model.AgentVersionEntity
-import cn.cotenite.interfaces.dto.agent.PublishAgentVersionRequest
+import cn.cotenite.interfaces.dto.agent.request.PublishAgentVersionRequest
 import java.time.LocalDateTime
 
 /**
@@ -22,7 +22,7 @@ object AgentVersionAssembler {
             versionNumber = it.versionNumber,
             systemPrompt = it.systemPrompt,
             welcomeMessage = it.welcomeMessage,
-            tools = it.tools,
+            toolIds = it.toolIds,
             knowledgeBaseIds = it.knowledgeBaseIds,
             changeLog = it.changeLog,
             agentType = it.agentType,
@@ -44,14 +44,14 @@ object AgentVersionAssembler {
     fun createVersionEntity(agent: Map<String, Any?>, request: PublishAgentVersionRequest): MutableMap<String, Any?> {
         val now = LocalDateTime.now()
         return mutableMapOf(
-            "agentId" to agent["id"],
+            "id" to agent["id"],
             "name" to agent["name"],
             "avatar" to agent["avatar"],
             "description" to agent["description"],
             "versionNumber" to request.versionNumber,
             "systemPrompt" to agent["systemPrompt"],
             "welcomeMessage" to agent["welcomeMessage"],
-            "tools" to (agent["tools"] ?: emptyList<AgentTool>()),
+            "toolIds" to (agent["toolIds"] ?: emptyList<AgentTool>()),
             "knowledgeBaseIds" to (agent["knowledgeBaseIds"] ?: emptyList<String>()),
             "changeLog" to request.changeLog,
             "agentType" to agent["agentType"],

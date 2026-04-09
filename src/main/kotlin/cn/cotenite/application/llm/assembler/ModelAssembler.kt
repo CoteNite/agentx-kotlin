@@ -3,8 +3,8 @@ package cn.cotenite.application.llm.assembler
 import cn.cotenite.application.llm.dto.ModelDTO
 import cn.cotenite.domain.llm.model.ModelEntity
 import cn.cotenite.domain.llm.model.enums.ModelType
-import cn.cotenite.interfaces.dto.llm.ModelCreateRequest
-import cn.cotenite.interfaces.dto.llm.ModelUpdateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelCreateRequest
+import cn.cotenite.interfaces.dto.llm.request.ModelUpdateRequest
 import java.time.LocalDateTime
 
 /**

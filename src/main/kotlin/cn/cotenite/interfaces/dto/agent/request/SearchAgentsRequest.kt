@@ -1,4 +1,4 @@
-package cn.cotenite.interfaces.dto.agent
+package cn.cotenite.interfaces.dto.agent.request
 
 /**
  * 搜索Agent的请求对象
