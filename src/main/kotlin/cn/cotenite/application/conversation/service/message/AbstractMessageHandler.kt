@@ -57,7 +57,12 @@ abstract class AbstractMessageHandler(
     ) {
         agent.chat(chatContext.userMessage).apply {
             var messageBuilder = StringBuilder()
-            ignoreErrors()
+
+            onError { throwable ->
+                transport.sendMessage(connection,
+                    AgentChatResponse.buildEndMessage(throwable.message?:"内部发生错误", MessageType.TEXT)
+                )
+            }
 
             onPartialResponse { reply ->
                 messageBuilder.append(reply)

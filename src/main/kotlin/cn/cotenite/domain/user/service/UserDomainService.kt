@@ -1,12 +1,12 @@
 package cn.cotenite.domain.user.service
 
-import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
-import org.springframework.stereotype.Service
 import cn.cotenite.domain.user.model.UserEntity
 import cn.cotenite.domain.user.repository.UserRepository
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.utils.PasswordUtils
-import java.util.UUID
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import org.springframework.stereotype.Service
+import java.util.*
 
 /**
  * 用户领域服务
@@ -39,7 +39,7 @@ class UserDomainService(
             this.password = PasswordUtils.encode(password)
             nickname = generateNickname()
             valid()
-            checkAccountExist(this.email, this.phone)
+            checkAccountExist(this.email)
             userRepository.checkInsert(this)
         }
 
@@ -53,12 +53,10 @@ class UserDomainService(
         return userEntity
     }
 
-    fun checkAccountExist(email: String?, phone: String?) {
+    fun checkAccountExist(email: String?) {
         val exists = userRepository.selectOne(
             KtQueryWrapper(UserEntity::class.java)
                 .eq(email != null, UserEntity::email, email)
-                .or(phone != null)
-                .eq(phone != null, UserEntity::phone, phone)
         ) != null
         if (exists) {
             throw BusinessException("账号已存在,不可重复账注册")
@@ -73,6 +71,13 @@ class UserDomainService(
         val user = userRepository.selectById(userId) ?: throw BusinessException("用户不存在")
         user.password = PasswordUtils.encode(newPassword)
         userRepository.checkedUpdateById(user)
+    }
+
+    fun getByIds(userIds: MutableList<String?>?): List<UserEntity?> {
+        if (userIds.isNullOrEmpty()) {
+            return emptyList()
+        }
+        return userRepository.selectByIds(userIds)
     }
 
     private fun generateNickname(): String =

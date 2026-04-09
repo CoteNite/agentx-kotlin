@@ -1,7 +1,7 @@
 package cn.cotenite.domain.task.model
 
 import cn.cotenite.domain.task.constant.TaskStatus
-import cn.cotenite.infrastructure.converter.TaskStatusConverter
+import cn.cotenite.infrastructure.converter.ScheduledTaskStatusConverter
 import cn.cotenite.infrastructure.entity.BaseEntity
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
@@ -54,7 +54,7 @@ class TaskEntity : BaseEntity() {
     /**
      * 任务状态，只有子任务有
      */
-    @TableField(value = "status", typeHandler = TaskStatusConverter::class)
+    @TableField(value = "status", typeHandler = ScheduledTaskStatusConverter::class)
     var status: TaskStatus? = null
 
     /**

@@ -70,7 +70,7 @@ class MCPGatewayService(
             if (statusCode in 200..299 && responseBody != null) {
                 val result = JsonUtils.parseObject(responseBody, MutableMap::class.java)
                 logger.info("MCP Gateway 部署响应: $result")
-                (result["success"] as? Boolean) ?: false
+                (result?.get("success") as? Boolean) ?: false
             } else {
                 val errorMsg = "MCP Gateway 部署失败，状态码: $statusCode，响应: $responseBody"
                 logger.error(errorMsg)

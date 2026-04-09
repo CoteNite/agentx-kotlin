@@ -2,7 +2,6 @@ package cn.cotenite.domain.tool.service
 
 import cn.cotenite.domain.tool.constant.ToolStatus
 import cn.cotenite.domain.tool.model.ToolEntity
-import cn.cotenite.domain.tool.model.ToolVersionEntity
 import cn.cotenite.domain.tool.model.UserToolEntity
 import cn.cotenite.domain.tool.repository.ToolRepository
 import cn.cotenite.domain.tool.repository.ToolVersionRepository
@@ -119,14 +118,11 @@ class ToolDomainService(
             .eq(ToolEntity::id, toolId)
             .eq(ToolEntity::userId, userId)
 
-        val versionWrapper = KtQueryWrapper(ToolVersionEntity::class.java)
-            .eq(ToolVersionEntity::toolId, toolId)
-
         val userToolWrapper = KtQueryWrapper(UserToolEntity::class.java)
             .eq(UserToolEntity::toolId, toolId)
+            .eq(UserToolEntity::userId,userId)
 
         toolRepository.checkedDelete(toolWrapper)
-        toolVersionRepository.delete(versionWrapper)
         userToolRepository.delete(userToolWrapper)
     }
 
@@ -169,5 +165,12 @@ class ToolDomainService(
 
         return mcpServers.keys.firstOrNull()
             ?: throw BusinessException("工具ID: ${tool.id} 无法从安装命令中获取工具名称。")
+    }
+
+    fun getByIds(toolIds: List<String?>): List<ToolEntity>{
+        if (toolIds.isEmpty()) {
+            return emptyList()
+        }
+        return toolRepository.selectByIds(toolIds)
     }
 }

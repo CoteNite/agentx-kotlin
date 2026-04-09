@@ -27,5 +27,6 @@ data class ToolVersionDTO(
     var userName: String? = null,
     var versions: List<ToolVersionDTO>? = null,
     var installCount: Long? = null,
-    var mcpServerName: String? = null
+    var mcpServerName: String? = null,
+    var delete: Boolean?=null
 )

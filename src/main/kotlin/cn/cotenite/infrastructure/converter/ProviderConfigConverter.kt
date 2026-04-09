@@ -34,6 +34,6 @@ class ProviderConfigConverter : org.apache.ibatis.type.BaseTypeHandler<ProviderC
     private fun parseEncryptedJson(encryptedStr: String?): ProviderConfig {
         if (encryptedStr.isNullOrBlank()) return ProviderConfig()
         val jsonStr = EncryptUtils.decrypt(encryptedStr) ?: "{}"
-        return JsonUtils.parseObject(jsonStr, ProviderConfig::class.java)
+        return JsonUtils.parseObject(jsonStr, ProviderConfig::class.java) ?: ProviderConfig()
     }
 }

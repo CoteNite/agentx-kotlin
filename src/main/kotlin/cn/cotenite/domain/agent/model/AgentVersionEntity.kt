@@ -51,7 +51,7 @@ class AgentVersionEntity : BaseEntity() {
     var userId: String? = null
     /** 预先设置的工具参数  */
     @TableField(value = "tool_preset_params", typeHandler = MapConverter::class)
-    var toolPresetParams: MutableMap<String?, MutableMap<String?, String?>?>? = null
+    var toolPresetParams: MutableMap<String?, MutableMap<String, MutableMap<String?, String?>?>?>?  = null
 
     fun getPublishStatusEnum(): PublishStatus = PublishStatus.fromCode(publishStatus)
 

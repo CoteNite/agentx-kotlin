@@ -5,6 +5,9 @@ import cn.cotenite.domain.conversation.constant.MessageType
 import cn.cotenite.domain.conversation.constant.Role
 import cn.cotenite.domain.llm.model.config.ProviderConfig
 import cn.cotenite.domain.llm.model.enums.ModelType
+import cn.cotenite.domain.scheduledtask.constant.RepeatType
+import cn.cotenite.domain.scheduledtask.constant.ScheduleTaskStatus
+import cn.cotenite.domain.scheduledtask.model.RepeatConfig
 import cn.cotenite.domain.task.constant.TaskStatus
 import cn.cotenite.domain.tool.constant.ToolStatus
 import cn.cotenite.domain.tool.constant.ToolType
@@ -16,8 +19,10 @@ import cn.cotenite.infrastructure.converter.MessageTypeConverter
 import cn.cotenite.infrastructure.converter.ModelTypeConverter
 import cn.cotenite.infrastructure.converter.ProviderConfigConverter
 import cn.cotenite.infrastructure.converter.ProviderProtocolConverter
+import cn.cotenite.infrastructure.converter.RepeatConfigConverter
+import cn.cotenite.infrastructure.converter.RepeatTypeConverter
 import cn.cotenite.infrastructure.converter.RoleConverter
-import cn.cotenite.infrastructure.converter.TaskStatusConverter
+import cn.cotenite.infrastructure.converter.ScheduledTaskStatusConverter
 import cn.cotenite.infrastructure.converter.ToolStatusConverter
 import cn.cotenite.infrastructure.converter.ToolTypeConverter
 import cn.cotenite.infrastructure.converter.UploadTypeConverter
@@ -51,10 +56,14 @@ class MyBatisTypeHandlerConfig(
         typeHandlerRegistry.register(ModelType::class.java, ModelTypeConverter())
         typeHandlerRegistry.register(Role::class.java, RoleConverter())
         typeHandlerRegistry.register(MessageType::class.java, MessageTypeConverter())
-        typeHandlerRegistry.register(TaskStatus::class.java, TaskStatusConverter())
         typeHandlerRegistry.register(ToolStatus::class.java, ToolStatusConverter())
         typeHandlerRegistry.register(ToolType::class.java, ToolTypeConverter())
         typeHandlerRegistry.register(UploadType::class.java, UploadTypeConverter())
+        
+        // 定时任务相关的TypeHandler
+        typeHandlerRegistry.register(RepeatType::class.java, RepeatTypeConverter())
+        typeHandlerRegistry.register(RepeatConfig::class.java, RepeatConfigConverter())
+        typeHandlerRegistry.register(ScheduleTaskStatus::class.java, ScheduledTaskStatusConverter())
 
         logger.info("已手动注册类型处理器，当前数量: {}", typeHandlerRegistry.typeHandlers.size)
     }

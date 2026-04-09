@@ -45,7 +45,7 @@ class LoginAppService(
     }
 
     fun sendEmailVerificationCode(email: String, captchaUuid: String, captchaCode: String, ip: String) {
-        userDomainService.checkAccountExist(email, null)
+        userDomainService.checkAccountExist(email)
         verificationCodeService.generateCode(email, captchaUuid, captchaCode, ip)
             .also { emailService.sendVerificationCode(email, it) }
     }

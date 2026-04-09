@@ -166,7 +166,19 @@ class ToolAppService(
 
     fun getInstalledTools(userId: String, queryToolRequest: QueryToolRequest): Page<ToolVersionDTO> {
         val userToolPage = userToolDomainService.listByUserId(userId, queryToolRequest)
-        val dtoList = userToolPage.records.map { ToolAssembler.toDTO(it) }
+
+        // 查询对应的工具是否还存在
+        val toolMap = toolDomainService
+            .getByIds(userToolPage.records.mapNotNull { it.toolId })
+            .associateBy { it.id }
+
+        val dtoList = userToolPage.records.map { userToolEntity ->
+            ToolAssembler.toDTO(userToolEntity).apply {
+                if (!toolMap.containsKey(userToolEntity.toolId)) {
+                    delete = true
+                }
+            }
+        }
 
         return Page<ToolVersionDTO>(userToolPage.current, userToolPage.size, userToolPage.total).apply {
             this.records = dtoList
@@ -181,10 +193,10 @@ class ToolAppService(
     fun uninstallTool(toolId: String, userId: String) {
 
         // 先检查是否是用户自己创建的工具
-        val toolEntity= toolDomainService.getTool(toolId)
+        val toolEntity = toolDomainService.getTool(toolId)
 
-        if (toolEntity.userId.equals(userId)) {
-            // 不允许删除用户自己创建的工具
+        if (toolEntity.userId == userId) {
+            // 不允许卸载自己创建的工具
             throw BusinessException("不允许卸载自己创建的工具")
         }
         userToolDomainService.delete(toolId, userId)
@@ -202,12 +214,22 @@ class ToolAppService(
 
         var dtoList = records.map { entity ->
             ToolAssembler.toDTO(entity).apply {
-                installCount = toolsInstallMap[toolId] ?: 0L
+                installCount = toolsInstallMap[entity.toolId] ?: 0L
             }
         }
 
         if (dtoList.size > 10) {
             dtoList = dtoList.shuffled().take(10)
+        }
+
+        // 批量查询并设置用户昵称
+        val userNicknameMap = userDomainService
+            .getByIds(dtoList.mapNotNull { it.userId }.toMutableList())
+            .filterNotNull()
+            .associate { it.id!! to (it.nickname ?: "") }
+
+        dtoList.forEach { dto ->
+            userNicknameMap[dto.userId]?.let { dto.userName = it }
         }
 
         return dtoList

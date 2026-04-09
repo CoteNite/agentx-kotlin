@@ -1,7 +1,5 @@
 package cn.cotenite.application.agent.service
 
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import cn.cotenite.application.conversation.assembler.MessageAssembler
 import cn.cotenite.application.conversation.assembler.SessionAssembler
 import cn.cotenite.application.conversation.dto.SessionDTO
@@ -9,8 +7,11 @@ import cn.cotenite.domain.agent.service.AgentDomainService
 import cn.cotenite.domain.agent.service.AgentWorkspaceDomainService
 import cn.cotenite.domain.conversation.service.ConversationDomainService
 import cn.cotenite.domain.conversation.service.SessionDomainService
+import cn.cotenite.domain.scheduledtask.service.ScheduledTaskExecutionService
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.interfaces.dto.conversation.ConversationRequest
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 助理会话应用服务
@@ -20,7 +21,8 @@ class AgentSessionAppService(
     private val agentWorkspaceDomainService: AgentWorkspaceDomainService,
     private val agentDomainService: AgentDomainService,
     private val sessionDomainService: SessionDomainService,
-    private val conversationDomainService: ConversationDomainService
+    private val conversationDomainService: ConversationDomainService,
+    private val scheduledTaskExecutionService: ScheduledTaskExecutionService
 ) {
 
     fun getAgentSessionList(userId: String, agentId: String): List<SessionDTO> {
@@ -53,6 +55,8 @@ class AgentSessionAppService(
     fun deleteSession(id: String, userId: String) {
         sessionDomainService.deleteSession(id, userId)
         conversationDomainService.deleteConversationMessages(id)
+        // 删除定时任务（包括取消延迟队列中的任务）
+        scheduledTaskExecutionService.deleteTasksBySessionId(id, userId)
     }
 
     fun sendMessage(id: String, userId: String, conversationRequest: ConversationRequest) {

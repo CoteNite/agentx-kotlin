@@ -11,6 +11,7 @@ import cn.cotenite.domain.agent.model.AgentWorkspaceEntity
 import cn.cotenite.domain.agent.model.LLMModelConfig
 import cn.cotenite.domain.agent.service.AgentDomainService
 import cn.cotenite.domain.agent.service.AgentWorkspaceDomainService
+import cn.cotenite.domain.scheduledtask.service.ScheduledTaskExecutionService
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.interfaces.dto.agent.request.CreateAgentRequest
 import cn.cotenite.interfaces.dto.agent.request.PublishAgentVersionRequest
@@ -24,7 +25,8 @@ import cn.cotenite.interfaces.dto.agent.request.UpdateAgentRequest
 @Service
 class AgentAppService(
     private val agentDomainService: AgentDomainService,
-    private val agentWorkspaceDomainService: AgentWorkspaceDomainService
+    private val agentWorkspaceDomainService: AgentWorkspaceDomainService,
+    private val scheduledTaskExecutionService: ScheduledTaskExecutionService
 ) {
 
     @Transactional
@@ -71,6 +73,7 @@ class AgentAppService(
         agentDomainService.toggleAgentStatus(agentId).let(AgentAssembler::toDTO)
 
     fun deleteAgent(agentId: String, userId: String) {
+        scheduledTaskExecutionService.deleteTasksByAgentId(agentId,userId)
         agentDomainService.deleteAgent(agentId, userId)
     }
 

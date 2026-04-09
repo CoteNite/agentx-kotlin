@@ -28,5 +28,5 @@ data class ToolDTO(
     var updatedAt: LocalDateTime? = null,
     var rejectReason: String? = null,
     var failedStepStatus: ToolStatus? = null,
-    var mcpServerName: String? = null
+    var mcpServerName: String? = null,
 )

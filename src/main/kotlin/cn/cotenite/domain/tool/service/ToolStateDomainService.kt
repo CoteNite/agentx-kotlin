@@ -103,7 +103,6 @@ class ToolStateDomainService(
             val nextStatusCandidate = processor.getNextStatus()
             if (nextStatusCandidate != initialStatus) {
                 toolEntity.status = nextStatusCandidate
-
                 toolRepository.updateById(toolEntity)
                 logger.info("工具ID: {} 状态从 {} 更新为 {}。", toolEntity.id, initialStatus, nextStatusCandidate);
                 if (nextStatusCandidate == ToolStatus.MANUAL_REVIEW) {
