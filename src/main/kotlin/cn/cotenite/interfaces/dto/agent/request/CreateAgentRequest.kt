@@ -17,5 +17,6 @@ data class CreateAgentRequest(
     var welcomeMessage: String? = null,
     var toolIds: List<String>? = null,
     var knowledgeBaseIds: List<String>? = null,
-    var toolPresetParams: MutableMap<String?, MutableMap<String?, MutableMap<String?, String?>?>?>? =null
+    var toolPresetParams: MutableMap<String?, MutableMap<String?, MutableMap<String?, String?>?>?>? =null,
+    var multiModal: Boolean
 )

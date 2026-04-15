@@ -36,7 +36,17 @@ class AgentSessionAppService(
         if (sessions.isEmpty()) {
             sessions.add(sessionDomainService.createSession(agentId, userId))
         }
-        return SessionAssembler.toDTOs(sessions)
+
+        return agentDomainService.getAgentById(agentId).run {
+            if (!this.userId.equals(userId)){
+                val latestAgentVersion = agentDomainService.getLatestAgentVersion(agentId)
+                multiModal=latestAgentVersion?.multiModal
+            }
+            SessionAssembler.toDTOs(sessions).map { dTO ->
+                dTO.multiModel=this.multiModal
+                dTO
+            }
+        }
     }
 
     fun createSession(userId: String, agentId: String): SessionDTO {

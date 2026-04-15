@@ -94,3 +94,24 @@ mcp:
   gateway:
     api-key: 123456
     base-url: http://localhost:8005
+
+
+# S3对象存储配置
+s3:
+  # 1. 指向你本地 Docker 启动的 Minio API 端口
+  endpoint: ${S3_ENDPOINT:http://localhost:9000}
+  # 2. 填入你 docker run 时设置的用户名 (ROOT_USER)
+  access-key: ${S3_ACCESS_KEY:minioadmin}
+  # 3. 填入你 docker run 时设置的密码 (ROOT_PASSWORD)
+  secret-key: ${S3_SECRET_KEY:minioadmin}
+  # 4. 填入你在 Minio 控制台手动创建好的 Bucket 名称
+  bucket-name: ${S3_BUCKET_NAME:agentx}
+  # 5. Minio 本地单机部署通常随便填，或者填 us-east-1
+  region: ${S3_REGION:us-east-1}
+  # 6. 重要：Minio 建议设置为 true（路径样式访问）
+  # 访问方式会从 bucket.127.0.0.1:9000 变成 127.0.0.1:9000/bucket
+  path-style-access: ${S3_PATH_STYLE_ACCESS:true}
+  # 7. 可选：如果你的图片需要公网回显，且没有配置 Nginx 转发
+  # 可以直接配置为 http://127.0.0.1:9000/my-test-bucket/
+  url-prefix: ${S3_URL_PREFIX:}
+  custom-domain: ${S3_CUSTOM_DOMAIN:}

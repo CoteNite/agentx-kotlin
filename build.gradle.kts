@@ -36,12 +36,18 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
     implementation("net.lingala.zip4j:zip4j:2.11.5")
     implementation("org.kohsuke:github-api:1.330")
+
+    // AWS S3 SDK for S3-compatible object storage
+    implementation("software.amazon.awssdk:s3:2.20.162")
+    implementation("software.amazon.awssdk:url-connection-client:2.20.162")
+    developmentOnly("org.springframework.boot:spring-boot-configuration-processor")
+
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
     implementation("cn.hutool:hutool-crypto:5.8.26")
     implementation("cn.hutool:hutool-captcha:5.8.26")
     implementation("org.eclipse.angus:jakarta.mail:2.0.2")
-
+    implementation("org.postgresql:postgresql")
 
     // LangChain4j with Kotlin support
     implementation("com.github.lucky-aeon.langchain4j:langchain4j:${langchainVersion}")
@@ -57,7 +63,8 @@ dependencies {
     
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    runtimeOnly("org.postgresql:postgresql")
+
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

@@ -27,6 +27,7 @@ object AgentAssembler {
             toolIds = request.toolIds.orEmpty().toMutableList()
             knowledgeBaseIds = request.knowledgeBaseIds.orEmpty().toMutableList()
             toolPresetParams=request.toolPresetParams
+            multiModal=request.multiModal
             createdAt = now
             updatedAt = now
         }

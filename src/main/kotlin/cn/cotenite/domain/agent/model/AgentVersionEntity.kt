@@ -49,6 +49,9 @@ class AgentVersionEntity : BaseEntity() {
     var publishedAt: LocalDateTime? = null
     @TableField("user_id")
     var userId: String? = null
+    /** 是否支持多模态  */
+    @TableField("multi_modal")
+    var multiModal: Boolean? = null
     /** 预先设置的工具参数  */
     @TableField(value = "tool_preset_params", typeHandler = MapConverter::class)
     var toolPresetParams: MutableMap<String?, MutableMap<String, MutableMap<String?, String?>?>?>?  = null

@@ -9,5 +9,6 @@ data class ChatRequest(
     @field:NotBlank(message = "消息内容不可为空")
     var message: String,
     @field:NotBlank(message = "会话id不可为空")
-    var sessionId: String
+    var sessionId: String,
+    var fileUrls: List<String?>? =emptyList()
 )

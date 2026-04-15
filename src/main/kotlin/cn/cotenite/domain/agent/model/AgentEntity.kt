@@ -38,6 +38,11 @@ class AgentEntity : BaseEntity() {
     var enabled: Boolean = true
     @TableField("agent_type")
     var agentType: Int = AgentType.CHAT_ASSISTANT.code
+
+    /** 是否支持多模态  */
+    @TableField("multi_modal")
+    var multiModal: Boolean? = null
+
     @TableField("user_id")
     var userId: String? = null
 

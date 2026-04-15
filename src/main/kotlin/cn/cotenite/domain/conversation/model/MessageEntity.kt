@@ -2,6 +2,7 @@ package cn.cotenite.domain.conversation.model
 
 import cn.cotenite.domain.conversation.constant.MessageType
 import cn.cotenite.domain.conversation.constant.Role
+import cn.cotenite.infrastructure.converter.ListConverter
 import cn.cotenite.infrastructure.converter.MessageTypeConverter
 import cn.cotenite.infrastructure.converter.RoleConverter
 import cn.cotenite.infrastructure.entity.BaseEntity
@@ -33,6 +34,9 @@ class MessageEntity : BaseEntity() {
     var model: String? = null
     @TableField("metadata")
     var metadata: String? = null
+
+    @TableField(value = "file_urls", typeHandler = ListConverter::class)
+    var fileUrls: MutableList<String?>? = null
     /**
      * 消息类型
      */

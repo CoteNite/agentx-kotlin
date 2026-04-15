@@ -35,13 +35,7 @@ class ScheduledTaskAppService(
     fun updateScheduledTask(request: UpdateScheduledTaskRequest, userId: String): ScheduledTaskDTO {
         val updateEntity = ScheduledTaskAssembler.toEntity(request, userId)
 
-        val task = scheduledTaskDomainService.getTask(request.id!!, userId)
-        updateEntity.apply {
-            status = task.status
-            sessionId = task.sessionId
-            agentId = task.agentId
-            lastExecuteTime = task.lastExecuteTime
-        }
+
 
         if (updateEntity.repeatConfig != null) {
             updateEntity.nextExecuteTime = taskScheduleService.calculateNextExecuteTime(updateEntity, LocalDateTime.now())

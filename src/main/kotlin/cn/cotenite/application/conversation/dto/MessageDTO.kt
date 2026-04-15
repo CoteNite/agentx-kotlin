@@ -12,5 +12,6 @@ data class MessageDTO(
     var content: String? = null,
     var createdAt: LocalDateTime? = null,
     var provider: String? = null,
-    var model: String? = null
+    var model: String? = null,
+    var fileUrls: MutableList<String?>?=null
 )

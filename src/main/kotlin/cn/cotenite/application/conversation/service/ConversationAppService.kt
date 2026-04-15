@@ -1,14 +1,19 @@
 package cn.cotenite.application.conversation.service
 
 import cn.cotenite.application.conversation.assembler.MessageAssembler
+import cn.cotenite.application.conversation.dto.AgentPreviewRequest
 import cn.cotenite.application.conversation.dto.ChatRequest
 import cn.cotenite.application.conversation.dto.MessageDTO
 import cn.cotenite.application.conversation.service.handler.MessageHandlerFactory
 import cn.cotenite.application.conversation.service.handler.context.ChatContext
+import cn.cotenite.application.conversation.service.message.preview.PreviewMessageHandler
+import cn.cotenite.application.user.service.UserSettingsAppService
+import cn.cotenite.domain.agent.constant.AgentType
 import cn.cotenite.domain.agent.model.AgentEntity
 import cn.cotenite.domain.agent.model.LLMModelConfig
 import cn.cotenite.domain.agent.service.AgentDomainService
 import cn.cotenite.domain.agent.service.AgentWorkspaceDomainService
+import cn.cotenite.domain.conversation.constant.Role
 import cn.cotenite.domain.conversation.model.ContextEntity
 import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.conversation.service.ContextDomainService
@@ -30,6 +35,7 @@ import cn.cotenite.infrastructure.transport.MessageTransportFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.time.LocalDateTime
 
 /**
  * 对话应用服务
@@ -49,12 +55,13 @@ class ConversationAppService(
     private val messageDomainService: MessageDomainService,
     private val messageHandlerFactory: MessageHandlerFactory,
     private val transportFactory: MessageTransportFactory,
-    private val userToolDomainService: UserToolDomainService
+    private val userToolDomainService: UserToolDomainService,
+    private val userSettingsAppService: UserSettingsAppService,
+    private val previewMessageHandler: PreviewMessageHandler
 ) {
 
     fun getConversationMessages(sessionId: String, userId: String): List<MessageDTO> {
-        val sessionEntity = sessionDomainService.find(sessionId, userId)
-            ?: throw BusinessException("会话不存在")
+        sessionDomainService.find(sessionId, userId) ?: throw BusinessException("会话不存在")
 
         return conversationDomainService.getConversationMessages(sessionId)
             .let { MessageAssembler.toDTOs(it) }
@@ -114,7 +121,9 @@ class ConversationAppService(
             model = model,
             provider = provider,
             llmModelConfig = llmModelConfig,
-            mcpServerName=mcpServerNames
+            mcpServerName=mcpServerNames,
+            fileUrls=chatRequest.fileUrls?.toMutableList()?:emptyList<String?>().toMutableList(),
+            chatRequest=chatRequest
         )
     }
 
@@ -126,11 +135,11 @@ class ConversationAppService(
         model: ModelEntity,
         provider: ProviderEntity,
         llmModelConfig: LLMModelConfig,
-        mcpServerName: List<String?>
+        mcpServerName: List<String?>,
+        fileUrls: MutableList<String?>,
+        chatRequest: ChatRequest
     ): ChatContext
     {
-
-
         val contextEntity = contextDomainService.findBySessionId(sessionId) ?: ContextEntity().apply { this.sessionId = sessionId }
 
         val messageEntities = contextEntity.activeMessages.let { ids ->
@@ -139,6 +148,17 @@ class ConversationAppService(
                     applyTokenOverflowStrategy(llmModelConfig, provider, model.modelId!!, contextEntity, it)
                 }
             } else emptyList()
+        }.toMutableList()
+
+
+        // 特殊处理当前对话的文件，因为在后续的对话中无法发送文件
+        chatRequest.fileUrls?.isEmpty()?.let {
+            if (!it) {
+                val messageEntity = MessageEntity()
+                messageEntity.role=Role.USER
+                messageEntity.fileUrls=fileUrls.toMutableList()
+                messageEntities.add(messageEntity)
+            }
         }
 
         return ChatContext(
@@ -151,7 +171,8 @@ class ConversationAppService(
             llmModelConfig = llmModelConfig,
             contextEntity = contextEntity,
             messageHistory = messageEntities,
-            mcpServerName=mcpServerName
+            mcpServerName=mcpServerName,
+            fileUrls=fileUrls
         )
 
     }
@@ -199,4 +220,110 @@ class ConversationAppService(
                 createdAt = message.createdAt!!
             }
         }
+
+    /** Agent预览功能 - 无需保存会话的对话体验 */
+    fun previewAgent(previewRequest: AgentPreviewRequest, userId: String): SseEmitter {
+        // 1. 准备预览环境
+        val environment = preparePreviewEnvironment(previewRequest, userId)
+
+        // 2. 获取传输方式
+        val transport = transportFactory.getTransport<SseEmitter>(MessageTransportFactory.TRANSPORT_TYPE_SSE)
+
+        // 3. 使用预览专用的消息处理器
+        return previewMessageHandler.chat(environment, transport)
+    }
+
+    /** 准备预览对话环境 */
+    private fun preparePreviewEnvironment(previewRequest: AgentPreviewRequest, userId: String): ChatContext {
+        // 1. 创建虚拟Agent实体
+        val virtualAgent = createVirtualAgent(previewRequest, userId)
+
+        // 2. 获取模型信息：使用 Elvis 运算符处理默认值
+        val modelId = previewRequest.modelId?.takeIf { it.isNotBlank() }
+            ?: userSettingsAppService.getUserDefaultModelId(userId)
+            ?: throw BusinessException("用户未设置默认模型，且预览请求中未指定模型")
+
+        val model = llmDomainService.getModelById(modelId).apply { isActive() }
+
+        // 3. 获取服务商信息
+        val provider = llmDomainService.getProvider(model.providerId!!, userId).apply { isActive() }
+
+        // 4. 处理工具配置
+        val mcpServerNames = previewRequest.toolIds?.takeIf { it.isNotEmpty() }?.let { ids ->
+            userToolDomainService.getInstallTool(ids, userId).map { it.mcpServerName }
+        } ?: emptyList()
+
+        // 5 & 6. 创建并初始化环境对象
+        return ChatContext(
+            sessionId = "preview-session",
+            userId = userId,
+            userMessage = previewRequest.userMessage!!,
+            agent = virtualAgent,
+            model = model,
+            provider = provider,
+            llmModelConfig = createDefaultLLMModelConfig(modelId),
+            mcpServerName = mcpServerNames,
+            fileUrls = previewRequest.fileUrls
+        ).apply {
+            // 7. 设置预览上下文和历史消息
+            setupPreviewContextAndHistory(this, previewRequest)
+        }
+    }
+
+    /** 创建虚拟Agent实体 */
+    private fun createVirtualAgent(previewRequest: AgentPreviewRequest, userId: String) = AgentEntity().apply {
+        id = "preview-agent"
+        this.userId = userId
+        name = "预览助理"
+        systemPrompt = previewRequest.systemPrompt
+        toolIds = previewRequest.toolIds?.toMutableList()?:emptyList<String>().toMutableList()
+        toolPresetParams = previewRequest.toolPresetParams
+        agentType = AgentType.CHAT_ASSISTANT.code
+        enabled = true
+        createdAt = LocalDateTime.now()
+        updatedAt = LocalDateTime.now()
+    }
+
+    /** 创建默认的LLM模型配置 */
+    private fun createDefaultLLMModelConfig(modelId: String) = LLMModelConfig().apply {
+        this.modelId = modelId
+        temperature = 0.7
+        topP = 0.9
+        maxTokens = 4000
+        strategyType = TokenOverflowStrategyEnum.NONE
+        summaryThreshold = 2000
+    }
+
+    /** 设置预览上下文和历史消息 */
+    private fun setupPreviewContextAndHistory(environment: ChatContext, previewRequest: AgentPreviewRequest) {
+        val contextEntity = ContextEntity().apply {
+            sessionId = "preview-session"
+            activeMessages = mutableListOf()
+        }
+
+        // 转换前端传入的历史消息
+        val messageEntities = previewRequest.messageHistory?.map { dto ->
+            MessageEntity().apply {
+                id = dto.id
+                role = dto.role
+                content = dto.content
+                sessionId = "preview-session"
+                createdAt = dto.createdAt
+                fileUrls = dto.fileUrls
+                tokenCount = if (dto.role == Role.USER) 50 else 100
+            }
+        }?.toMutableList() ?: mutableListOf()
+
+        // 特殊处理当前对话的文件
+        previewRequest.fileUrls.takeIf { it.isNotEmpty() }?.let { urls ->
+            messageEntities.add(MessageEntity().apply {
+                role = Role.USER
+                sessionId = "preview-session"
+                fileUrls = urls.toMutableList()
+            })
+        }
+
+        environment.contextEntity = contextEntity
+        environment.messageHistory = messageEntities
+    }
 }

@@ -1,7 +1,9 @@
 package cn.cotenite.domain.user.service
 
 import cn.cotenite.domain.user.model.UserEntity
+import cn.cotenite.domain.user.model.UserSettingsEntity
 import cn.cotenite.domain.user.repository.UserRepository
+import cn.cotenite.domain.user.repository.UserSettingsRepository
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.utils.PasswordUtils
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
@@ -13,7 +15,8 @@ import java.util.*
  */
 @Service
 class UserDomainService(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val settingsRepository: UserSettingsRepository
 ) {
 
     fun getUserInfo(id: String): UserEntity? = userRepository.selectById(id)
@@ -32,8 +35,9 @@ class UserDomainService(
                 .eq(UserEntity::githubId, githubId)
         )
 
-    fun register(email: String?, phone: String?, password: String): UserEntity =
-        UserEntity().apply {
+    fun register(email: String?, phone: String?, password: String): UserEntity {
+
+        val userEntity = UserEntity().apply {
             this.email = email
             this.phone = phone
             this.password = PasswordUtils.encode(password)
@@ -42,6 +46,13 @@ class UserDomainService(
             checkAccountExist(this.email)
             userRepository.checkInsert(this)
         }
+        UserSettingsEntity().apply {
+            userId=userEntity.id
+            settingsRepository.insert(this)
+        }
+
+        return userEntity
+    }
 
     fun encryptPassword(password: String): String = PasswordUtils.encode(password)
 

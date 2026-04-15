@@ -1,6 +1,5 @@
 package cn.cotenite.application.llm.service
 
-import org.springframework.stereotype.Service
 import cn.cotenite.application.llm.assembler.ModelAssembler
 import cn.cotenite.application.llm.assembler.ProviderAssembler
 import cn.cotenite.application.llm.dto.ModelDTO
@@ -8,19 +7,22 @@ import cn.cotenite.application.llm.dto.ProviderDTO
 import cn.cotenite.domain.llm.model.enums.ModelType
 import cn.cotenite.domain.llm.model.enums.ProviderType
 import cn.cotenite.domain.llm.service.LlmDomainService
+import cn.cotenite.domain.user.service.UserSettingsDomainService
 import cn.cotenite.infrastructure.entity.Operator
 import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
 import cn.cotenite.interfaces.dto.llm.request.ModelCreateRequest
 import cn.cotenite.interfaces.dto.llm.request.ModelUpdateRequest
 import cn.cotenite.interfaces.dto.llm.request.ProviderCreateRequest
 import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
+import org.springframework.stereotype.Service
 
 /**
  * LLM应用服务
  */
 @Service
 class LLMAppService(
-    private val llmDomainService: LlmDomainService
+    private val llmDomainService: LlmDomainService,
+    private val userSettingsDomainService: UserSettingsDomainService
 ) {
 
     fun getProviderDetail(providerId: String, userId: String): ProviderDTO? =
@@ -97,4 +99,10 @@ class LLMAppService(
             .flatMap { it.getModels() }
             .filter { modelType == null || it.type == modelType }
             .mapNotNull(ModelAssembler::toDTO)
+
+    fun getDefaultModel(userId: String?): ModelDTO? {
+        val userDefaultModelId = userSettingsDomainService.getUserDefaultModelId(userId!!)
+        val modelEntity = llmDomainService.getModelById(userDefaultModelId!!)
+        return ModelAssembler.toDTO(modelEntity)
+    }
 }

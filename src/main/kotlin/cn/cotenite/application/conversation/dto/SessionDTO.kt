@@ -12,5 +12,6 @@ data class SessionDTO(
     var createdAt: LocalDateTime? = null,
     var updatedAt: LocalDateTime? = null,
     var isArchived: Boolean = false,
-    var agentId: String? = null
+    var agentId: String? = null,
+    var multiModel: Boolean?=null
 )

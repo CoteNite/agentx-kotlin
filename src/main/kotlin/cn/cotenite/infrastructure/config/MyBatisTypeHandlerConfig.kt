@@ -12,6 +12,7 @@ import cn.cotenite.domain.task.constant.TaskStatus
 import cn.cotenite.domain.tool.constant.ToolStatus
 import cn.cotenite.domain.tool.constant.ToolType
 import cn.cotenite.domain.tool.constant.UploadType
+import cn.cotenite.domain.user.model.config.UserSettingsConfig
 import cn.cotenite.infrastructure.converter.LLMModelConfigConverter
 import cn.cotenite.infrastructure.converter.ListConverter
 import cn.cotenite.infrastructure.converter.ListStringConverter
@@ -26,6 +27,7 @@ import cn.cotenite.infrastructure.converter.ScheduledTaskStatusConverter
 import cn.cotenite.infrastructure.converter.ToolStatusConverter
 import cn.cotenite.infrastructure.converter.ToolTypeConverter
 import cn.cotenite.infrastructure.converter.UploadTypeConverter
+import cn.cotenite.infrastructure.converter.UserSettingsConfigConverter
 import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
 import jakarta.annotation.PostConstruct
 import org.apache.ibatis.session.SqlSessionFactory
@@ -64,6 +66,7 @@ class MyBatisTypeHandlerConfig(
         typeHandlerRegistry.register(RepeatType::class.java, RepeatTypeConverter())
         typeHandlerRegistry.register(RepeatConfig::class.java, RepeatConfigConverter())
         typeHandlerRegistry.register(ScheduleTaskStatus::class.java, ScheduledTaskStatusConverter())
+        typeHandlerRegistry.register(UserSettingsConfig::class.java, UserSettingsConfigConverter())
 
         logger.info("已手动注册类型处理器，当前数量: {}", typeHandlerRegistry.typeHandlers.size)
     }

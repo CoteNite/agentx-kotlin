@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
+import java.util.function.Consumer
+import java.util.stream.Collectors
 
 /**
  * 工具应用服务
@@ -116,6 +118,17 @@ class ToolAppService(
                 installCount = toolsInstallMap[entity.toolId] ?: 0L
             }
         }
+
+        val userNicknameMap = userDomainService
+            .getByIds(dtoList.map { it.userId }.toMutableList())
+            .associateBy({ it?.id }, { it?.nickname })
+
+        dtoList.forEach(Consumer { toolVersionDTO: ToolVersionDTO? ->
+            if (userNicknameMap.containsKey(toolVersionDTO?.userId)) {
+                toolVersionDTO?.userName= userNicknameMap[toolVersionDTO.userId]
+            }
+        })
+
 
         return Page<ToolVersionDTO>(listToolVersion.current, listToolVersion.size, listToolVersion.total).apply {
             this.records = dtoList

@@ -25,9 +25,10 @@ data class ChatContext(
     val model: ModelEntity,
     val provider: ProviderEntity,
     val llmModelConfig: LLMModelConfig,
-    val contextEntity: ContextEntity,
-    val messageHistory: List<MessageEntity>,
-    val mcpServerName: List<String?>
+    var contextEntity: ContextEntity?=null,
+    var messageHistory: List<MessageEntity>?=null,
+    val mcpServerName: List<String?>,
+    val fileUrls: MutableList<String?>?=null
 ) {
 
     fun prepareChatRequest(): dev.langchain4j.model.chat.request.ChatRequest {
@@ -37,11 +38,11 @@ data class ChatContext(
             ?.takeIf { it.isNotBlank() }
             ?.let { chatMessages.add(SystemMessage(it)) }
 
-        contextEntity.summary
+        contextEntity?.summary
             ?.takeIf { it.isNotBlank() }
             ?.let { chatMessages.add(AiMessage(AgentPromptTemplates.SUMMARY_PREFIX + it)) }
 
-        messageHistory.forEach { messageEntity ->
+        messageHistory?.forEach { messageEntity ->
             when (messageEntity.role) {
                 USER -> chatMessages.add(UserMessage(messageEntity.content ?: ""))
                 SYSTEM -> chatMessages.add(AiMessage(messageEntity.content ?: ""))

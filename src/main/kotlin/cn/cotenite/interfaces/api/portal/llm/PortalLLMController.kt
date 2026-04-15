@@ -87,6 +87,10 @@ class PortalLLMController(
     @GetMapping("/models/types")
     fun getModelTypes(): Result<List<ModelType>> = Result.success(ModelType.entries)
 
+    @GetMapping("/models/default")
+    fun getDefaultModel(): Result<ModelDTO?> =
+        Result.success(llmAppService.getDefaultModel(currentUserId()))
+
     @GetMapping("/models")
     fun getModels(@RequestParam(required = false) modelType: String?): Result<List<ModelDTO>> {
         val type = modelType?.let(ModelType::fromCode)

@@ -1,6 +1,5 @@
 package cn.cotenite.domain.scheduledtask.service
 
-import cn.cotenite.domain.scheduledtask.event.ScheduledTaskExecuteEvent
 import cn.cotenite.domain.scheduledtask.model.DelayedTaskItem
 import cn.cotenite.domain.scheduledtask.model.ScheduledTaskEntity
 import jakarta.annotation.PostConstruct
@@ -8,7 +7,6 @@ import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.DelayQueue
@@ -16,7 +14,7 @@ import java.util.concurrent.DelayQueue
 /** 延迟队列管理器 — 使用 Kotlin 协程驱动任务调度 */
 @Service
 class DelayedTaskQueueManager(
-    private val eventPublisher: ApplicationEventPublisher
+    private val taskExecutor: ScheduleTaskExecutor
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -97,33 +95,16 @@ class DelayedTaskQueueManager(
         }
     }
 
-    /** 处理单个到期任务 */
+    /** 处理单个到期任务：检查是否可执行 → 执行 → 重新调度 */
     private fun handleItem(item: DelayedTaskItem) {
         val task = item.task
-        publishExecuteEvent(task)
-        scheduleNextExecution(task)
-    }
 
-    /** 通过 Spring 事件驱动任务执行（保持 Domain 层解耦） */
-    private fun publishExecuteEvent(task: ScheduledTaskEntity) {
-        val event = ScheduledTaskExecuteEvent(
-            source   = this,
-            taskId   = task.id   ?: return,
-            userId   = task.userId   ?: return,
-            sessionId = task.sessionId ?: return,
-            content  = task.content  ?: return
-        )
-        eventPublisher.publishEvent(event)
-        logger.info("已发布任务执行事件: taskId={}", task.id)
-    }
-
-    /** 若任务有下次执行时间，则重新入队 */
-    private fun scheduleNextExecution(task: ScheduledTaskEntity) {
-        val nextTime = task.nextExecuteTime ?: return
-        if (!task.isActive()) return
-        if (nextTime.isAfter(LocalDateTime.now())) {
-            delayQueue.offer(DelayedTaskItem(task, nextTime))
-            logger.info("任务已重新调度: taskId={}, nextTime={}", task.id, nextTime)
+        if (taskExecutor.canExecute(task)) {
+            taskExecutor.executeTask(task)
+        } else {
+            logger.info("任务不满足执行条件，跳过执行: taskId={}", task.id)
         }
     }
+
+
 }

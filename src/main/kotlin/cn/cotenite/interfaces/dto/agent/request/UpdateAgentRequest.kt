@@ -18,5 +18,6 @@ data class UpdateAgentRequest(
     var modelConfig: LLMModelConfig? = null,
     var toolIds: List<String>? = null,
     var knowledgeBaseIds: List<String>? = null,
-    var toolPresetParams: MutableMap<String?, MutableMap<String?, MutableMap<String?, String?>?>?>? = null
+    var toolPresetParams: MutableMap<String?, MutableMap<String?, MutableMap<String?, String?>?>?>? = null,
+    var multiModal: Boolean
 )

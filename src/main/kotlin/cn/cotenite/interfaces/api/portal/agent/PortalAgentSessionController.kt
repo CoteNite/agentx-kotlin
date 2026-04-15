@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import cn.cotenite.application.agent.service.AgentSessionAppService
+import cn.cotenite.application.conversation.dto.AgentPreviewRequest
 import cn.cotenite.application.conversation.dto.ChatRequest
 import cn.cotenite.application.conversation.dto.MessageDTO
 import cn.cotenite.application.conversation.dto.SessionDTO
@@ -56,6 +57,11 @@ class PortalAgentSessionController(
     @PostMapping("/chat")
     fun chat(@RequestBody @Validated chatRequest: ChatRequest): SseEmitter =
         conversationAppService.chat(chatRequest, currentUserId())
+
+    /** Agent预览功能，用于在创建/编辑 Agent 时预览对话效果，无需保存会话 */
+    @PostMapping("/preview")
+    fun preview(@RequestBody previewRequest: AgentPreviewRequest): SseEmitter =
+        conversationAppService.previewAgent(previewRequest, currentUserId())
 
     private fun currentUserId(): String = UserContext.getCurrentUserId()
 }

@@ -22,6 +22,7 @@ data class AgentDTO(
     var agentType: Int? = null,
     var userId: String? = null,
     var createdAt: LocalDateTime? = null,
+    var multiModal: Boolean?=true,
     var updatedAt: LocalDateTime? = null
 ) {
     /**

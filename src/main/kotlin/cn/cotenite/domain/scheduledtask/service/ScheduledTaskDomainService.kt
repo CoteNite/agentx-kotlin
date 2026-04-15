@@ -114,6 +114,10 @@ class ScheduledTaskDomainService(
     /** 记录任务执行时间 */
     fun recordExecution(taskId: String, executeTime: LocalDateTime) {
         scheduledTaskRepository.checkedUpdate(
+            ScheduledTaskEntity().apply {
+                id = taskId
+                nextExecuteTime = executeTime
+            },
             KtUpdateWrapper(ScheduledTaskEntity::class.java)
                 .eq(ScheduledTaskEntity::id, taskId)
                 .set(ScheduledTaskEntity::lastExecuteTime, executeTime)

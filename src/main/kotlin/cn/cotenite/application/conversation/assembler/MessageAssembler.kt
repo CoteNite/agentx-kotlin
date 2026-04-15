@@ -3,6 +3,7 @@ package cn.cotenite.application.conversation.assembler
 import cn.cotenite.application.conversation.dto.MessageDTO
 import cn.cotenite.domain.conversation.constant.Role
 import cn.cotenite.domain.conversation.model.MessageEntity
+import org.springframework.beans.BeanUtils
 import java.time.LocalDateTime
 
 /**
@@ -11,14 +12,9 @@ import java.time.LocalDateTime
 object MessageAssembler {
 
     fun toDTO(message: MessageEntity?): MessageDTO? = message?.let {
-        MessageDTO(
-            id = it.id,
-            role = it.role,
-            content = it.content,
-            createdAt = it.createdAt,
-            provider = it.provider,
-            model = it.model
-        )
+        MessageDTO().apply {
+            BeanUtils.copyProperties(message, this)
+        }
     }
 
     fun toDTOs(messages: List<MessageEntity>?): List<MessageDTO> = messages.orEmpty().mapNotNull(::toDTO)
