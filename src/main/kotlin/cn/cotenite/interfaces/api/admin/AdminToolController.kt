@@ -15,7 +15,7 @@ import cn.cotenite.interfaces.api.common.Result
  * Date  2026/4/6 20:41
  */
 @RestController
-@RequestMapping("/admin/tool")
+@RequestMapping("/admin/tools")
 class AdminToolController(
     private val adminToolAppService: AdminToolAppService
 ){

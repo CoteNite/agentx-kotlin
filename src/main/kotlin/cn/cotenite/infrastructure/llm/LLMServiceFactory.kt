@@ -19,7 +19,7 @@ class LLMServiceFactory{
         val config = ProviderConfig(
             apiKey = provider.config?.apiKey ?: throw BusinessException("服务商配置不存在"),
             baseUrl = provider.config?.baseUrl,
-            model = model.modelId,
+            model = model.modelEndpoint,
             protocol = protocol
         )
         return LLMProviderService.getStream(protocol, config)
@@ -40,7 +40,7 @@ class LLMServiceFactory{
         val providerConfig = ProviderConfig(
             config?.apiKey,
             config?.baseUrl,
-            model.modelId,
+            model.modelEndpoint,
             protocol
         )
 

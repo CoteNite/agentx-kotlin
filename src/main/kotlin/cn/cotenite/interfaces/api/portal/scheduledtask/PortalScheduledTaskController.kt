@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*
 
 /** 定时任务管理控制器 */
 @RestController
-@RequestMapping("/scheduled-task")
+@RequestMapping("/scheduled-tasks")
 class PortalScheduledTaskController(
     private val scheduledTaskAppService: ScheduledTaskAppService
 ) {

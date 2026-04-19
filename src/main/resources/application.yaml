@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8088
   servlet:
     context-path: /api
   # 添加Tomcat异步请求配置
@@ -95,7 +95,6 @@ mcp:
     api-key: 123456
     base-url: http://localhost:8005
 
-
 # S3对象存储配置
 s3:
   # 1. 指向你本地 Docker 启动的 Minio API 端口
@@ -115,3 +114,11 @@ s3:
   # 可以直接配置为 http://127.0.0.1:9000/my-test-bucket/
   url-prefix: ${S3_URL_PREFIX:}
   custom-domain: ${S3_CUSTOM_DOMAIN:}
+
+# 高可用网关配置
+high-availability:
+  enabled: false # 是否启用高可用功能
+  gateway-url: ${HIGH_AVAILABILITY_GATEWAY_URL:http://localhost:8081} # 高可用网关地址
+  api-key: ${HIGH_AVAILABILITY_API_KEY:default-api-key-1234567890} # API密钥
+  connect-timeout: 30000 # 连接超时时间(毫秒)
+  read-timeout: 60000 # 读取超时时间(毫秒)

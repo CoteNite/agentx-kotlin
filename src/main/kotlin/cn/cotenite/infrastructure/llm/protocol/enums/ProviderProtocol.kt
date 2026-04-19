@@ -1,18 +1,17 @@
-package cn.cotenite.infrastructure.llm.protocol.enums
+﻿package cn.cotenite.infrastructure.llm.protocol.enums
 
-/**
- * LLM服务商协议
- */
-enum class ProviderProtocol(
-    val code: String
-) {
-    OPENAI("openai"),
-    ANTHROPIC("anthropic"),
-    AZURE_OPENAI("azure_openai"),
-    OTHER("other");
+enum class ProviderProtocol {
+    OPENAI,
+    ANTHROPIC;
 
     companion object {
-        fun fromCode(code: String?): ProviderProtocol =
-            entries.firstOrNull { it.code.equals(code, true) || it.name.equals(code, true) } ?: OTHER
+        fun fromCode(code: String): ProviderProtocol {
+            for (protocol in entries) {
+                if (protocol.name.equals(code, ignoreCase = true)) {
+                    return protocol
+                }
+            }
+            throw IllegalArgumentException("Unknown model type code: $code")
+        }
     }
 }

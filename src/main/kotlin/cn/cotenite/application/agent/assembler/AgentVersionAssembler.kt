@@ -25,7 +25,6 @@ object AgentVersionAssembler {
             toolIds = it.toolIds,
             knowledgeBaseIds = it.knowledgeBaseIds,
             changeLog = it.changeLog,
-            agentType = it.agentType,
             publishStatus = it.publishStatus,
             rejectReason = it.rejectReason,
             reviewTime = it.reviewTime,
@@ -40,25 +39,4 @@ object AgentVersionAssembler {
 
     fun createVersionEntity(agent: AgentEntity, request: PublishAgentVersionRequest): AgentVersionEntity =
         AgentVersionEntity.createFromAgent(agent, request.versionNumber, request.changeLog)
-
-    fun createVersionEntity(agent: Map<String, Any?>, request: PublishAgentVersionRequest): MutableMap<String, Any?> {
-        val now = LocalDateTime.now()
-        return mutableMapOf(
-            "id" to agent["id"],
-            "name" to agent["name"],
-            "avatar" to agent["avatar"],
-            "description" to agent["description"],
-            "versionNumber" to request.versionNumber,
-            "systemPrompt" to agent["systemPrompt"],
-            "welcomeMessage" to agent["welcomeMessage"],
-            "toolIds" to (agent["toolIds"] ?: emptyList<AgentTool>()),
-            "knowledgeBaseIds" to (agent["knowledgeBaseIds"] ?: emptyList<String>()),
-            "changeLog" to request.changeLog,
-            "agentType" to agent["agentType"],
-            "publishStatus" to 1,
-            "userId" to agent["userId"],
-            "createdAt" to now,
-            "updatedAt" to now
-        )
-    }
 }

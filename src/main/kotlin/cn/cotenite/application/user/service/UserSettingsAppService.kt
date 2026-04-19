@@ -38,4 +38,22 @@ class UserSettingsAppService(
     fun getUserDefaultModelId(userId: String): String? =
         userSettingsDomainService.getUserDefaultModelId(userId)
 
+
+    /** 获取用户降级链配置
+     * @param userId 用户ID
+     * @return 降级模型ID列表，如果未启用降级则返回null
+     */
+    fun getUserFallbackChain(userId: String?): MutableList<String>? {
+        val settings= userSettingsDomainService.getUserSettings(userId!!)
+        if (settings.settingConfig == null) {
+            return null
+        }
+
+        val fallbackConfig= settings.settingConfig?.fallbackConfig
+        if (fallbackConfig == null || !fallbackConfig.enabled || fallbackConfig.fallbackChain.isEmpty()) {
+            return null
+        }
+
+        return fallbackConfig.fallbackChain
+    }
 }

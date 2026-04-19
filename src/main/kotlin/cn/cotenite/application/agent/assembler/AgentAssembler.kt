@@ -21,7 +21,6 @@ object AgentAssembler {
             avatar = request.avatar
             systemPrompt = request.systemPrompt
             welcomeMessage = request.welcomeMessage
-            agentType = request.agentType.code
             this.userId = userId
             enabled = true
             toolIds = request.toolIds.orEmpty().toMutableList()

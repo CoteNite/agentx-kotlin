@@ -39,6 +39,23 @@ class UserSettingsDomainService(
     /** 获取用户默认模型ID
      * @param userId 用户ID
      * @return 默认模型ID */
-    fun getUserDefaultModelId(userId: String): String? =
-        getUserSettings(userId).defaultModelId
+    fun getUserDefaultModelId(userId: String): String? = getUserSettings(userId).defaultModelId
+
+    /** 获取用户降级链配置
+     * @param userId 用户ID
+     * @return 降级模型ID列表，如果未启用降级则返回null
+     */
+    fun getUserFallbackChain(userId: String): MutableList<String> {
+        val settings: UserSettingsEntity = getUserSettings(userId)
+        if (settings.settingConfig == null) {
+            return ArrayList()
+        }
+
+        val fallbackConfig= settings.settingConfig?.fallbackConfig
+        if (fallbackConfig == null || !fallbackConfig.enabled || fallbackConfig.fallbackChain.isEmpty()) {
+            return ArrayList()
+        }
+
+        return fallbackConfig.fallbackChain
+    }
 }

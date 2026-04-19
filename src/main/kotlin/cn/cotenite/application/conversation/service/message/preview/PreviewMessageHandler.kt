@@ -8,6 +8,7 @@ import cn.cotenite.application.conversation.service.message.agent.AgentToolManag
 import cn.cotenite.domain.conversation.constant.MessageType
 import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.conversation.service.MessageDomainService
+import cn.cotenite.domain.llm.service.HighAvailabilityDomainService
 import cn.cotenite.infrastructure.llm.LLMServiceFactory
 import cn.cotenite.infrastructure.storage.OssUploadService
 import cn.cotenite.infrastructure.transport.MessageTransport
@@ -21,8 +22,14 @@ class PreviewMessageHandler(
     llmServiceFactory: LLMServiceFactory,
     messageDomainService: MessageDomainService,
     ossUploadService: OssUploadService,
+    highAvailabilityDomainService: HighAvailabilityDomainService,
     private val agentToolManager: AgentToolManager,
-) : AbstractMessageHandler(llmServiceFactory, messageDomainService, ossUploadService) {
+) : AbstractMessageHandler(
+    llmServiceFactory,
+    messageDomainService,
+    ossUploadService,
+    highAvailabilityDomainService
+){
 
     override fun provideTools(chatContext: ChatContext): ToolProvider? {
         return agentToolManager.createToolProvider(

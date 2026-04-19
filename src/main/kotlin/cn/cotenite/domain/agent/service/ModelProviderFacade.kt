@@ -28,7 +28,7 @@ class ModelProviderFacade(
             apiKey = provider.config?.apiKey,
             baseUrl = provider.config?.baseUrl,
             model = model.modelId,
-            protocol = provider.protocol ?: ProviderProtocol.OTHER
+            protocol = provider.protocol ?: ProviderProtocol.OPENAI
         )
 
         return ModelProviderResult(

@@ -17,6 +17,7 @@ data class ModelDTO(
     var type: ModelType? = null,
     var isOfficial: Boolean? = null,
     var status: Boolean? = null,
+    var modelEndpoint: String?=null,
     var createdAt: LocalDateTime? = null,
     var updatedAt: LocalDateTime? = null
 )

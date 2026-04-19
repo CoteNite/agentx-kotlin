@@ -11,5 +11,6 @@ data class ModelUpdateRequest(
     var modelId: String? = null,
     @field:NotBlank(message = "名称不可为空")
     var name: String? = null,
-    var description: String? = null
+    var description: String? = null,
+    var modelEndpoint: String?=null
 )

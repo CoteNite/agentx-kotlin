@@ -36,7 +36,7 @@ abstract class JsonToStringConverter<T>(
     override fun getNullableResult(cs: CallableStatement, columnIndex: Int): T? =
         parseJson(cs.getString(columnIndex))
 
-    private fun parseJson(json: String?): T? =
+    protected open fun parseJson(json: String?): T? =
         json?.takeIf { it.isNotBlank() }?.let {
             typeReference?.let { ref -> JsonUtils.parseObject(it, ref) }
                 ?: JsonUtils.parseObject(it, requireNotNull(type))

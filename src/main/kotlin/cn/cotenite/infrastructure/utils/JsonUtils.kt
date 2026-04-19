@@ -30,7 +30,12 @@ object JsonUtils {
      */
     fun toJsonString(obj: Any?): String {
         if (obj == null) return "{}"
-        return runCatching { objectMapper.writeValueAsString(obj) }
+        return runCatching {
+            println("JsonUtils Debug - toJsonString input: " + obj + " (type: " + obj.javaClass + ")")
+            val result= objectMapper.writeValueAsString(obj)
+            println("JsonUtils Debug - toJsonString result: $result")
+            result 
+        }
             .onFailure { log.error("JSON序列化失败: {}, 错误: {}", obj::class.simpleName, it.message, it) }
             .getOrDefault("{}")
     }
@@ -69,5 +74,33 @@ object JsonUtils {
         }
             .onFailure { log.error("JSON数组反序列化失败: {}", it.message, it) }
             .getOrDefault(emptyList())
+    }
+
+
+    /** 将JSON字符串转换为Map<String></String>, Object>
+     * 
+     * @param json JSON字符串
+     * @return 转换后的Map，失败返回null
+     */
+    fun parseMap(json: String?): MutableMap<String?, Any?>? {
+        if (json == null || json.isEmpty()) {
+            println("JsonUtils Debug - parseMap input is null or empty")
+            return null
+        }
+
+        try {
+            println("JsonUtils Debug - parseMap input: $json")
+            val result: MutableMap<String?, Any?>? =
+                objectMapper.readValue<MutableMap<String?, Any?>?>(
+                    json,
+                    object : TypeReference<MutableMap<String?, Any?>?>() {
+                    })
+            println("JsonUtils Debug - parseMap result: $result")
+            return result
+        } catch (e: Exception) {
+            log.error("JSON Map反序列化失败: {}", e.message, e)
+            println("JsonUtils Debug - parseMap failed for input: " + json + ", error: " + e.message)
+            return null
+        }
     }
 }

@@ -20,7 +20,7 @@ import cn.cotenite.interfaces.dto.agent.request.UpdateModelConfigRequest
  * Agent工作区控制器
  */
 @RestController
-@RequestMapping("/agent/workspace")
+@RequestMapping("/agents/workspaces")
 class PortalWorkspaceController(
     private val agentWorkspaceAppService: AgentWorkspaceAppService
 ) {

@@ -1,9 +1,6 @@
 package cn.cotenite.domain.llm.service
 
-import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
-import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import cn.cotenite.domain.llm.event.*
 import cn.cotenite.domain.llm.model.ModelEntity
 import cn.cotenite.domain.llm.model.ProviderAggregate
 import cn.cotenite.domain.llm.model.ProviderEntity
@@ -13,6 +10,13 @@ import cn.cotenite.domain.llm.repository.ProviderRepository
 import cn.cotenite.infrastructure.entity.Operator
 import cn.cotenite.infrastructure.exception.BusinessException
 import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
+import com.baomidou.mybatisplus.core.conditions.Wrapper
+import com.baomidou.mybatisplus.core.toolkit.Wrappers
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
+import org.springframework.context.ApplicationEventPublisher
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * LLM领域服务
@@ -20,7 +24,8 @@ import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
 @Service
 class LlmDomainService(
     private val providerRepository: ProviderRepository,
-    private val modelRepository: ModelRepository
+    private val modelRepository: ModelRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     fun createProvider(provider: ProviderEntity): ProviderEntity = provider.apply {
@@ -115,15 +120,29 @@ class LlmDomainService(
 
     @Transactional
     fun deleteProvider(providerId: String, userId: String, operator: Operator) {
+
+        val wrapper = KtQueryWrapper(ModelEntity::class.java)
+            .eq(ModelEntity::providerId, providerId)
+
+        val modelsToDelete = modelRepository.selectList(wrapper)
+
+
         providerRepository.checkedDelete(
             KtQueryWrapper(ProviderEntity::class.java)
                 .eq(ProviderEntity::id, providerId)
                 .eq(operator.needCheckUserId(), ProviderEntity::userId, userId)
         )
-        modelRepository.delete(
+        val delete = modelRepository.delete(
             KtQueryWrapper(ModelEntity::class.java)
                 .eq(ModelEntity::providerId, providerId)
         )
+        if (delete>0){
+            val deleteItems = modelsToDelete
+                .map { model ->
+                    ModelsBatchDeletedEvent.ModelDeleteItem(model.id!!, model.userId!!)
+                }
+            eventPublisher.publishEvent(ModelsBatchDeletedEvent(deleteItems,userId))
+        }
     }
 
     private fun validateProviderProtocol(protocol: ProviderProtocol?) {
@@ -136,6 +155,9 @@ class LlmDomainService(
 
     fun createModel(model: ModelEntity) {
         modelRepository.insert(model)
+        // 发布模型创建事件
+        eventPublisher.publishEvent(ModelCreatedEvent(model.id!!, model.userId!!, model))
+
     }
 
     fun updateModel(model: ModelEntity) {
@@ -145,6 +167,9 @@ class LlmDomainService(
                 .eq(ModelEntity::id, model.id)
                 .eq(ModelEntity::userId, model.userId)
         )
+
+        // 发布模型更新事件
+        eventPublisher.publishEvent(ModelUpdatedEvent(model.id!!, model.userId!!, model))
     }
 
     fun deleteModel(modelId: String, userId: String, operator: Operator) {
@@ -153,17 +178,32 @@ class LlmDomainService(
                 .eq(ModelEntity::id, modelId)
                 .eq(operator.needCheckUserId(), ModelEntity::userId, userId)
         )
+
+        // 发布模型删除事件
+        eventPublisher.publishEvent(ModelDeletedEvent(modelId, userId))
+
     }
 
     fun updateModelStatus(modelId: String, userId: String) {
-        val model = modelRepository.selectOne(
-            KtQueryWrapper(ModelEntity::class.java)
-                .eq(ModelEntity::id, modelId)
-                .eq(ModelEntity::userId, userId)
-        ) ?: throw BusinessException("模型不存在")
+        // 先获取当前模型信息，用于判断状态变更
+        val currentModel = getModelById(modelId)
+        val currentStatus = currentModel.status
+        val newStatus = !currentStatus // 状态取反
 
-        model.status = !model.status
-        modelRepository.checkedUpdateById(model)
+        val updateWrapper = KtUpdateWrapper(ModelEntity::class.java)
+            .eq(ModelEntity::id, modelId)
+            .eq(ModelEntity::userId, userId)
+            .setSql("status = NOT status")
+
+        modelRepository.checkedUpdate(updateWrapper)
+
+
+        // 获取更新后的模型信息
+        val updatedModel = getModelById(modelId)
+
+
+        // 发布模型状态变更事件
+        eventPublisher.publishEvent(ModelStatusChangedEvent(modelId, userId, updatedModel, newStatus, ""))
     }
 
     fun getProvidersByType(providerType: ProviderType, userId: String): List<ProviderAggregate> =
@@ -186,4 +226,13 @@ class LlmDomainService(
 
     fun getModelById(modelId: String): ModelEntity =
         modelRepository.selectById(modelId) ?: throw BusinessException("模型不存在")
+
+    /** 获取所有激活的模型
+     * @return 所有激活的模型列表
+     */
+    fun getAllActiveModels(): MutableList<ModelEntity?> {
+        val wrapper= KtQueryWrapper (ModelEntity::class.java).eq(ModelEntity::status, true)
+        return modelRepository.selectList(wrapper)
+    }
+
 }

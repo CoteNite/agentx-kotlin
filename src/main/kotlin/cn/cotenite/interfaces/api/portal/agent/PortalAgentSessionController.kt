@@ -24,7 +24,7 @@ import cn.cotenite.interfaces.api.common.Result
  * Agent会话管理控制器
  */
 @RestController
-@RequestMapping("/agent/session")
+@RequestMapping("/agents/sessions")
 class PortalAgentSessionController(
     private val agentSessionAppService: AgentSessionAppService,
     private val conversationAppService: ConversationAppService

@@ -1,6 +1,5 @@
 package cn.cotenite.domain.agent.model
 
-import cn.cotenite.domain.agent.constant.AgentType
 import cn.cotenite.infrastructure.converter.ListStringConverter
 import cn.cotenite.infrastructure.converter.MapConverter
 import cn.cotenite.infrastructure.entity.BaseEntity
@@ -36,9 +35,9 @@ class AgentEntity : BaseEntity() {
     var publishedVersion: String? = null
     @TableField("enabled")
     var enabled: Boolean = true
+    /** Agent类型：1-聊天助手, 2-功能性Agent */
     @TableField("agent_type")
-    var agentType: Int = AgentType.CHAT_ASSISTANT.code
-
+    var agentType: Int = 1
     /** 是否支持多模态  */
     @TableField("multi_modal")
     var multiModal: Boolean? = null
@@ -64,7 +63,7 @@ class AgentEntity : BaseEntity() {
                 this.name = name
                 this.description = description
                 this.avatar = avatar
-                this.agentType = agentType ?: AgentType.CHAT_ASSISTANT.code
+                this.agentType = agentType ?: 1
                 this.userId = userId
                 enabled = true
                 createdAt = now
@@ -100,6 +99,5 @@ class AgentEntity : BaseEntity() {
         deletedAt = LocalDateTime.now()
     }
 
-    fun getAgentTypeEnum(): AgentType = AgentType.fromCode(agentType)
 
 }

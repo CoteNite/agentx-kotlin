@@ -8,7 +8,6 @@ import cn.cotenite.domain.llm.model.enums.ModelType
 import cn.cotenite.domain.scheduledtask.constant.RepeatType
 import cn.cotenite.domain.scheduledtask.constant.ScheduleTaskStatus
 import cn.cotenite.domain.scheduledtask.model.RepeatConfig
-import cn.cotenite.domain.task.constant.TaskStatus
 import cn.cotenite.domain.tool.constant.ToolStatus
 import cn.cotenite.domain.tool.constant.ToolType
 import cn.cotenite.domain.tool.constant.UploadType
@@ -16,6 +15,7 @@ import cn.cotenite.domain.user.model.config.UserSettingsConfig
 import cn.cotenite.infrastructure.converter.LLMModelConfigConverter
 import cn.cotenite.infrastructure.converter.ListConverter
 import cn.cotenite.infrastructure.converter.ListStringConverter
+import cn.cotenite.infrastructure.converter.MapConverter
 import cn.cotenite.infrastructure.converter.MessageTypeConverter
 import cn.cotenite.infrastructure.converter.ModelTypeConverter
 import cn.cotenite.infrastructure.converter.ProviderConfigConverter
@@ -67,6 +67,8 @@ class MyBatisTypeHandlerConfig(
         typeHandlerRegistry.register(RepeatConfig::class.java, RepeatConfigConverter())
         typeHandlerRegistry.register(ScheduleTaskStatus::class.java, ScheduledTaskStatusConverter())
         typeHandlerRegistry.register(UserSettingsConfig::class.java, UserSettingsConfigConverter())
+        typeHandlerRegistry.register(Map::class.java, MapConverter())
+
 
         logger.info("已手动注册类型处理器，当前数量: {}", typeHandlerRegistry.typeHandlers.size)
     }

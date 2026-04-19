@@ -1,95 +1,119 @@
 package cn.cotenite.application.llm.assembler
 
+import cn.cotenite.application.llm.dto.ModelDTO
 import cn.cotenite.application.llm.dto.ProviderDTO
+import cn.cotenite.domain.llm.model.ModelEntity
 import cn.cotenite.domain.llm.model.ProviderAggregate
 import cn.cotenite.domain.llm.model.ProviderEntity
-import cn.cotenite.domain.llm.model.config.ProviderConfig
-import cn.cotenite.infrastructure.llm.protocol.enums.ProviderProtocol
 import cn.cotenite.interfaces.dto.llm.request.ProviderCreateRequest
 import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
 import java.time.LocalDateTime
 
-/**
- * 服务提供商对象转换器
- */
+/** 服务提供商对象转换器 */
 object ProviderAssembler {
 
-    fun toDTO(provider: ProviderEntity?): ProviderDTO? = provider?.let {
-        ProviderDTO(
-            id = it.id,
-            protocol = it.protocol,
-            name = it.name,
-            description = it.description,
-            config = it.config,
-            isOfficial = it.isOfficial,
-            status = it.status,
-            createdAt = it.createdAt,
-            updatedAt = it.updatedAt,
-            models = mutableListOf()
-        ).apply { maskSensitiveInfo() }
-    }
-
-    fun toDTO(provider: ProviderAggregate?): ProviderDTO? = provider?.let {
-        toDTO(it.entity)?.apply {
-            it.getModels().mapNotNull(ModelAssembler::toDTO).forEach { modelDTO ->
-                modelDTO.isOfficial = it.getIsOfficial()
-                models.add(modelDTO)
-            }
+    /** 将实体转换为DTO，并进行敏感信息脱敏 */
+    fun toDTO(provider: ProviderEntity?): ProviderDTO? {
+        if (provider == null) {
+            return null
         }
+
+        val dto = ProviderDTO()
+        dto.id = provider.id
+        dto.protocol = provider.protocol
+        dto.name = provider.name
+        dto.description = provider.description
+        dto.config = provider.config
+        dto.isOfficial = provider.isOfficial
+        dto.status = provider.status
+        dto.createdAt = provider.createdAt
+        dto.updatedAt = provider.updatedAt
+
+        // 脱敏处理（针对返回前端的场景）
+        dto.maskSensitiveInfo()
+
+        return dto
     }
 
+    /** 将多个聚合根转换为DTO列表 */
+    fun toDTOList(providers: List<ProviderAggregate>): List<ProviderDTO> {
+        return providers.map { toDTO(it) }.filterNotNull()
+    }
+
+    /** 将多个实体转换为DTO列表 */
+    fun toDTOListFromEntities(providers: List<ProviderEntity>): List<ProviderDTO> {
+        return providers.map { toDTO(it) }.filterNotNull()
+    }
+
+    /** 将创建请求转换为实体 */
     fun toEntity(request: ProviderCreateRequest, userId: String): ProviderEntity {
-        val now = LocalDateTime.now()
-        return ProviderEntity().apply {
-            this.userId = userId
-            protocol = request.protocol
-            name = request.name
-            description = request.description
-            config = request.config
-            status = request.status ?: true
-            createdAt = now
-            updatedAt = now
-        }
+        val provider = ProviderEntity()
+        provider.userId = userId
+        provider.protocol = request.protocol
+        provider.name = request.name
+        provider.description = request.description
+        provider.config = request.config // 会自动加密
+        provider.status = request.status!!
+        provider.createdAt = LocalDateTime.now()
+        provider.updatedAt = LocalDateTime.now()
+        return provider
     }
 
-    fun toEntity(request: ProviderUpdateRequest, userId: String): ProviderEntity = ProviderEntity().apply {
-        id = request.id
-        this.userId = userId
-        protocol = request.protocol
-        name = request.name
-        description = request.description
-        config = request.config
-        status = request.status ?: true
-        updatedAt = LocalDateTime.now()
+    /** 将更新请求转换为实体 */
+    fun toEntity(request: ProviderUpdateRequest, userId: String): ProviderEntity {
+        val provider = ProviderEntity()
+        provider.id = request.id
+        provider.userId = userId
+        provider.protocol = request.protocol
+        provider.name = request.name
+        provider.description = request.description
+        provider.config = request.config // 会自动加密
+        provider.status = request.status!!
+        provider.updatedAt = LocalDateTime.now()
+        return provider
     }
 
-    fun toDTO(provider: Map<String, Any?>?): ProviderDTO? = provider?.let {
-        val protocol = when (val rawProtocol = it["protocol"]) {
-            is ProviderProtocol -> rawProtocol
-            is String -> ProviderProtocol.entries.firstOrNull { protocol -> protocol.name == rawProtocol }
-            else -> null
-        }
-        val config = when (val rawConfig = it["config"]) {
-            is ProviderConfig -> rawConfig
-            is Map<*, *> -> ProviderConfig(
-                apiKey = rawConfig["apiKey"] as? String,
-                baseUrl = rawConfig["baseUrl"] as? String,
-                extras = rawConfig.filterKeys { key -> key is String }.mapKeys { entry -> entry.key as String }.toMutableMap()
-            )
-            else -> null
+    /** 根据更新请求更新实体 */
+    fun updateEntity(entity: ProviderEntity?, request: ProviderUpdateRequest?) {
+        if (entity == null || request == null) {
+            return
         }
 
-        ProviderDTO(
-            id = it["id"] as? String,
-            protocol = protocol,
-            name = it["name"] as? String,
-            description = it["description"] as? String,
-            config = config,
-            isOfficial = it["isOfficial"] as? Boolean,
-            status = it["status"] as? Boolean,
-            createdAt = it["createdAt"] as? LocalDateTime,
-            updatedAt = it["updatedAt"] as? LocalDateTime,
-            models = mutableListOf()
-        ).apply { maskSensitiveInfo() }
+        if (request.name != null) {
+            entity.name = request.name
+        }
+
+        if (request.description != null) {
+            entity.description = request.description
+        }
+
+        if (request.config != null) {
+            entity.config = request.config // 会自动加密
+        }
+
+        if (request.status != null) {
+            entity.status = request.status!!
+        }
+
+        entity.updatedAt = LocalDateTime.now()
+    }
+
+    // 将聚合根转换为dto
+    fun toDTO(provider: ProviderAggregate?): ProviderDTO? {
+        if (provider == null) {
+            return null
+        }
+        val dto = toDTO(provider.entity) ?: return null
+
+        val models = provider.getModels()
+        if (models == null || models.isEmpty()) {
+            return dto
+        }
+        for (model in models) {
+            val modelDTO = ModelAssembler.toDTO(model, provider.getName()) ?: continue
+            modelDTO.isOfficial = provider.getIsOfficial()
+            dto.models.add(modelDTO)
+        }
+        return dto
     }
 }

@@ -28,6 +28,8 @@ data class ChatContext(
     var contextEntity: ContextEntity?=null,
     var messageHistory: List<MessageEntity>?=null,
     val mcpServerName: List<String?>,
+    /** 高可用实例ID  */
+    var instanceId: String? = null,
     val fileUrls: MutableList<String?>?=null
 ) {
 

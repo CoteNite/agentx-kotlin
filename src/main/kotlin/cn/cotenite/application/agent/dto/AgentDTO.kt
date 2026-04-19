@@ -1,8 +1,6 @@
 package cn.cotenite.application.agent.dto
 
 import cn.cotenite.domain.agent.constant.AgentStatus
-import cn.cotenite.domain.agent.constant.AgentType
-import cn.cotenite.domain.agent.model.AgentTool
 import java.time.LocalDateTime
 
 /**
@@ -30,8 +28,5 @@ data class AgentDTO(
      */
     fun getStatusText(): String = AgentStatus.fromCode(if (enabled) 1 else 0).description
 
-    /**
-     * 获取类型文本描述
-     */
-    fun getAgentTypeText(): String = AgentType.fromCode(agentType).description
+
 }

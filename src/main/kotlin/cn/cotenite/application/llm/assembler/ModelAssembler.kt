@@ -22,12 +22,23 @@ object ModelAssembler {
             name = it.name,
             description = it.description,
             type = it.type,
+            modelEndpoint = it.modelEndpoint,
             status = it.status,
             createdAt = it.createdAt,
             updatedAt = it.updatedAt,
             isOfficial = it.isOfficial
         )
     }
+
+    /** 将领域对象转换为DTO，并设置服务商名称  */
+    fun toDTO(model: ModelEntity?, providerName: String?): ModelDTO? {
+        val dto = toDTO(model)
+        if (dto != null) {
+            dto.providerName=providerName
+        }
+        return dto
+    }
+
 
     fun toDTOs(models: List<ModelEntity>?): List<ModelDTO> = models.orEmpty().mapNotNull(::toDTO)
 
@@ -40,6 +51,11 @@ object ModelAssembler {
             name = request.name
             description = request.description
             type = request.type
+            if (request.modelEndpoint!=null && request.modelEndpoint!!.isEmpty()){
+                modelEndpoint=request.modelEndpoint
+            }else{
+                modelEndpoint=request.modelId
+            }
             createdAt = now
             updatedAt = now
         }
@@ -51,7 +67,13 @@ object ModelAssembler {
         name = request.name
         description = request.description
         modelId = request.modelId
+        if (request.modelEndpoint!=null && request.modelEndpoint!!.isEmpty()){
+            modelEndpoint=request.modelEndpoint
+        }else{
+            modelEndpoint=request.modelId
+        }
         updatedAt = LocalDateTime.now()
+
     }
 
     fun toDTO(model: Map<String, Any?>?): ModelDTO? = model?.let {

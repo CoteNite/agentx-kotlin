@@ -8,14 +8,11 @@ import cn.cotenite.domain.conversation.constant.Role.ASSISTANT
 import cn.cotenite.domain.conversation.constant.Role.USER
 import cn.cotenite.domain.conversation.model.MessageEntity
 import cn.cotenite.domain.conversation.service.MessageDomainService
+import cn.cotenite.domain.llm.service.HighAvailabilityDomainService
 import cn.cotenite.infrastructure.llm.LLMServiceFactory
 import cn.cotenite.infrastructure.storage.OssUploadService
 import cn.cotenite.infrastructure.transport.MessageTransport
-import dev.langchain4j.data.message.AiMessage
-import dev.langchain4j.data.message.ImageContent
-import dev.langchain4j.data.message.SystemMessage
-import dev.langchain4j.data.message.TextContent
-import dev.langchain4j.data.message.UserMessage
+import dev.langchain4j.data.message.*
 import dev.langchain4j.memory.chat.MessageWindowChatMemory
 import dev.langchain4j.model.chat.StreamingChatModel
 import dev.langchain4j.model.openai.OpenAiChatModelName
@@ -31,7 +28,8 @@ import org.slf4j.LoggerFactory
 abstract class AbstractMessageHandler(
     protected open val llmServiceFactory: LLMServiceFactory,
     protected open val messageDomainService: MessageDomainService,
-    protected open val ossUploadService: OssUploadService
+    protected open val ossUploadService: OssUploadService,
+    protected open val highAvailabilityDomainService: HighAvailabilityDomainService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -61,12 +59,21 @@ abstract class AbstractMessageHandler(
         llmEntity: MessageEntity
     ) {
         agent.chat(chatContext.userMessage).apply {
+            val startTime = System.currentTimeMillis()
             chatContext.contextEntity?.let { messageDomainService.saveMessageAndUpdateContext(listOf(userEntity), it) }
             var messageBuilder = StringBuilder()
 
             onError { throwable ->
                 transport.sendMessage(connection,
                     AgentChatResponse.buildEndMessage(throwable.message?:"内部发生错误", MessageType.TEXT)
+                )
+
+
+                // 上报调用失败结果
+                val latency: Long = System.currentTimeMillis() - startTime
+                highAvailabilityDomainService.reportCallResult(
+                    chatContext.instanceId, chatContext.model.id!!,
+                    false, latency, throwable.message
                 )
             }
 
@@ -83,6 +90,13 @@ abstract class AbstractMessageHandler(
                 messageDomainService.updateMessage(userEntity)
                 chatContext.contextEntity?.let { messageDomainService.saveMessageAndUpdateContext(listOf(llmEntity), it) }
                 transport.sendEndMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT))
+
+                // 上报调用成功结果
+                val latency = System.currentTimeMillis() - startTime
+                highAvailabilityDomainService.reportCallResult(
+                    chatContext.instanceId, chatContext.model.id!!,
+                    true, latency, null
+                )
             }
 
             onToolExecuted { toolExecution ->

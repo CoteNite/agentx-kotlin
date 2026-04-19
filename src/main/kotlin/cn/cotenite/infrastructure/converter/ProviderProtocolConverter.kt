@@ -17,7 +17,7 @@ import java.sql.ResultSet
 class ProviderProtocolConverter : BaseTypeHandler<ProviderProtocol>() {
 
     override fun setNonNullParameter(ps: PreparedStatement, i: Int, parameter: ProviderProtocol, jdbcType: JdbcType?) {
-        ps.setString(i, parameter.code)
+        ps.setString(i, parameter.name)
     }
 
     override fun getNullableResult(rs: ResultSet, columnName: String): ProviderProtocol? =

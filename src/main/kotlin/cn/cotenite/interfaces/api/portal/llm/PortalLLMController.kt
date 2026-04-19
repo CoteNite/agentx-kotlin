@@ -27,7 +27,7 @@ import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
  * 大模型服务商控制器
  */
 @RestController
-@RequestMapping("/llm")
+@RequestMapping("/llms")
 class PortalLLMController(
     private val llmAppService: LLMAppService
 ) {

@@ -25,11 +25,14 @@ class MessageHandlerFactory(
      * @return 消息处理器
      */
     fun getHandler(agent: AgentEntity): AbstractMessageHandler {
-        return when (agent.agentType) {
-            1 -> getHandlerByType(MessageHandlerType.STANDARD)
-            2 -> getHandlerByType(MessageHandlerType.AGENT)
-            else -> getHandlerByType(MessageHandlerType.STANDARD)
-        }
+//        return when (agent.agentType) {
+//            1 -> getHandlerByType(MessageHandlerType.STANDARD)
+//            2 -> getHandlerByType(MessageHandlerType.AGENT)
+//            else -> getHandlerByType(MessageHandlerType.STANDARD)
+//        }
+
+        // 统一使用标准消息处理器
+        return getHandlerByType(MessageHandlerType.STANDARD)
     }
 
     private fun getHandlerByType(type: MessageHandlerType): AbstractMessageHandler {

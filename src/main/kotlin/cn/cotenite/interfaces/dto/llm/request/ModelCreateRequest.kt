@@ -13,5 +13,6 @@ data class ModelCreateRequest(
     @field:NotBlank(message = "名称不可为空")
     var name: String? = null,
     var description: String? = null,
-    var type: ModelType? = null
+    var type: ModelType? = null,
+    var modelEndpoint: String?=null
 )

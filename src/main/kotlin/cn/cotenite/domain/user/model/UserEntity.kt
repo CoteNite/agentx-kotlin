@@ -1,10 +1,11 @@
 package cn.cotenite.domain.user.model
 
+import cn.cotenite.infrastructure.entity.BaseEntity
+import cn.cotenite.infrastructure.exception.BusinessException
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import cn.cotenite.infrastructure.entity.BaseEntity
-import cn.cotenite.infrastructure.exception.BusinessException
+import kotlin.String
 
 /**
  * 用户实体
@@ -19,11 +20,17 @@ class UserEntity : BaseEntity() {
     var password: String? = null
     var githubId: String? = null
     var githubLogin: String? = null
-    var avatarUrl: String? = null
+    var avatarUrl: String?=null
+    var loginPlatform: String?=null
+    var isAdmin: Boolean?=null
 
     fun valid() {
         if (email.isNullOrBlank() && phone.isNullOrBlank() && githubId.isNullOrBlank()) {
             throw BusinessException("必须使用邮箱、手机号或GitHub账号来作为账号")
         }
     }
+    fun isAdmin(): Boolean {
+        return true == isAdmin
+    }
+
 }

@@ -37,8 +37,9 @@ class AgentVersionEntity : BaseEntity() {
     var knowledgeBaseIds: MutableList<String> = mutableListOf()
     @TableField("change_log")
     var changeLog: String? = null
+    /** Agent类型：1-聊天助手, 2-功能性Agent */
     @TableField("agent_type")
-    var agentType: Int? = null
+    var agentType: Int = 1
     @TableField("publish_status")
     var publishStatus: Int = PublishStatus.REVIEWING.code
     @TableField("reject_reason")

@@ -23,7 +23,7 @@ import cn.cotenite.interfaces.dto.agent.request.UpdateAgentRequest
  * 用户Agent管理控制器
  */
 @RestController
-@RequestMapping("/agent")
+@RequestMapping("/agents")
 class PortalAgentController(
     private val agentAppService: AgentAppService
 ) {

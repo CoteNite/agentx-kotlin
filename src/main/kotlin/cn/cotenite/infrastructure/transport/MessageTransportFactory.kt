@@ -12,7 +12,10 @@ class MessageTransportFactory(
     companion object {
         const val TRANSPORT_TYPE_SSE = "sse"
         const val TRANSPORT_TYPE_WEBSOCKET = "websocket"
+        const val TRANSPORT_TYPE_SYNC="sync"
     }
+
+
 
     @Suppress("UNCHECKED_CAST")
     fun <T> getTransport(type: String): MessageTransport<T> =

@@ -22,7 +22,7 @@ import cn.cotenite.interfaces.dto.llm.request.ProviderUpdateRequest
  * 管理员LLM管理控制器
  */
 @RestController
-@RequestMapping("/admin/llm")
+@RequestMapping("/admin/llms")
 class AdminLLMController(
     private val adminLLMAppService: AdminLLMAppService
 ) {

@@ -37,7 +37,7 @@ data class AgentChatResponse(
     /**
      * 时间戳
      */
-    var timestamp: Long? = System.currentTimeMillis(),
+    var timestamp: Long = System.currentTimeMillis(),
 
     /**
      * 任务列表，用于TASK_IDS类型消息

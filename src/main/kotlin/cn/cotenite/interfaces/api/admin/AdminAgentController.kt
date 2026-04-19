@@ -16,7 +16,7 @@ import cn.cotenite.interfaces.dto.agent.request.ReviewAgentVersionRequest
  * 管理员Agent管理控制器
  */
 @RestController
-@RequestMapping("/admin/agent")
+@RequestMapping("/admin/agents")
 class AdminAgentController(
     private val agentAppService: AgentAppService
 ) {
